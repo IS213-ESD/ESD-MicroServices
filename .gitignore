@@ -1,0 +1,21 @@
+# .gitignore
+
+# Python-specific
+*.pyc
+__pycache__/
+
+# Flask-specific
+instance/
+.webassets-cache/
+
+# Environment
+venv/
+.env
+*.env
+
+# IDE-specific
+.vscode/
+.idea/
+
+# Logs
+*.log
