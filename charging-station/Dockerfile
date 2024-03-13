@@ -11,4 +11,4 @@ COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Run your application
-CMD ["python", "./chargingstation.py"]
+CMD ["python", "./app.py"]

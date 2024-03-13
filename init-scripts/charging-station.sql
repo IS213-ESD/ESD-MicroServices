@@ -42,6 +42,7 @@ VALUES
 
 
 -- FUNCTIONS
+DROP FUNCTION IF EXISTS check_booking_overlap;
 DELIMITER //
 CREATE FUNCTION check_booking_overlap(
     p_charger_id INT,
@@ -59,7 +60,7 @@ BEGIN
     FROM chargingstationbooking
     WHERE charger_id = p_charger_id
     AND booking_date = p_booking_date
-    AND booking_status = 'IN_PROGRESS'
+	AND booking_status = 'IN_PROGRESS'
 	AND (
 		-- Case 1: New booking starts before existing booking and ends after existing booking
 		(p_booking_time_start <= booking_time_start AND ADDTIME(p_booking_time_start, SEC_TO_TIME(p_booking_duration_hours * 3600)) > ADDTIME(booking_time_start, SEC_TO_TIME(booking_duration_hours * 3600)))

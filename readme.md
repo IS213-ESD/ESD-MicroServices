@@ -24,6 +24,7 @@ Make sure you have the following installed on your machine:
     DB_PASSWORD=mypassword #Root password
     DB_USER=myuser
     DB_USER_PASSWORD=userpassword
+    dbURL='mysql+mysqlconnector://myuser:userpassword@localhost:3306/'
     ```
 
    Update the values accordingly.
