@@ -45,7 +45,8 @@ def get_nearby_chargers():
                         'charger_name': charger.charger_name,
                         'latitude': charger.latitude,
                         'longitude': charger.longitude,
-                        'distance': distance
+                        'distance': distance,
+                        'status': charger.status
                     })
 
         return jsonify({'nearby_chargers': nearby_chargers})
