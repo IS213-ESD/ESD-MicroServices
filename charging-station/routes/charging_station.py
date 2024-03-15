@@ -66,13 +66,13 @@ def get_nearby_stations():
         radius = float(request.args.get('radius'))
         booking_date = request.args.get('booking_date')  # format: 'YYYY-MM-DD'
         booking_time = request.args.get('booking_time')  # format: 'HH:mm:ss'
+        booking_datetime = datetime.datetime.strptime(booking_date + ' ' + booking_time, '%Y-%m-%d %H:%M:%S')
         booking_duration = int(request.args.get('booking_duration'))
         available_stations = ChargingStation.query.filter(
         ~ChargingStation.charger_id.in_(
                 db.session.query(ChargingStationBooking.charger_id).filter(
                     func.check_booking_overlap(ChargingStationBooking.charger_id, 
-                    booking_date,
-                    booking_time,
+                    booking_datetime,
                     booking_duration)
                 )
             )
