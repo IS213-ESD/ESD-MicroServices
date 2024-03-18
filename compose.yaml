@@ -108,6 +108,19 @@ services:
       volumes:
         - rabbitmq_data:/var/lib/rabbitmq # Persist RabbitMQ data
         
+  # Charging Station Microservice
+  #######################################
+  delectric-iot-charger:
+    build:
+      context: ./iot-charger
+    ports:
+      - "5002:5002"
+    depends_on:
+      - Delectric-mysql
+    environment:      
+      - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/ # Pointed to chargingstationdb
+    networks:
+      - delectric-network
 
   # #######################################
   # #          KONG CREATION              #
