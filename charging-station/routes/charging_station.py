@@ -1,11 +1,19 @@
-from flask import Flask, request, jsonify, Blueprint, jsonify
+from flask import Flask, request, jsonify, Blueprint, jsonify, send_from_directory
 from models import ChargingStation, ChargingStationBooking, db
 from sqlalchemy import text, func
 import datetime
 from geopy.distance import geodesic
 
 
-charging_station_bp = Blueprint('charging_station', __name__)
+charging_station_bp = Blueprint('charging_station', __name__, url_prefix='/charging-station')
+
+
+@charging_station_bp.route('/images/<image_filename>')
+def get_charger_image(image_filename):
+    # Replace 'charger_images' with the path to your directory containing charger images
+    directory = 'images'
+    return send_from_directory(directory, image_filename)
+
 
 @charging_station_bp.route("/chargers")
 def get_all_chargers():
@@ -40,15 +48,7 @@ def get_nearby_chargers():
                 distance = geodesic(user_coords, charger_coords).kilometers
 
                 if distance <= radius:
-                    nearby_chargers.append({
-                        'charger_id': charger.charger_id,
-                        'charger_name': charger.charger_name,
-                        'latitude': charger.latitude,
-                        'longitude': charger.longitude,
-                        'distance': distance,
-                        'status': charger.status
-                    })
-
+                    nearby_chargers.append(charger.json())
         return jsonify({'nearby_chargers': nearby_chargers})
 
     except ValueError as ve:
@@ -87,14 +87,7 @@ def get_nearby_stations():
                 distance = geodesic(user_coords, charger_coords).kilometers
 
                 if distance <= radius:
-                    nearby_stations.append({
-                        'charger_id': charger.charger_id,
-                        'charger_name': charger.charger_name,
-                        'latitude': charger.latitude,
-                        'longitude': charger.longitude,
-                        'distance': distance,
-                        'status': charger.status
-                    })
+                    nearby_stations.append(charger.json())
         return jsonify({"code": 200, "data": {"nearby_stations": nearby_stations}})
     except Exception as e:
         return jsonify({"code": 500, "message": f"Error: {str(e)}"}), 500
