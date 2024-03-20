@@ -7,6 +7,7 @@ networks:
 volumes:
   delectricdb-vol:
   pgdata: 
+  rabbitmq_data:
 
 services:
   #######################################
@@ -42,13 +43,28 @@ services:
       - delectric-network
 
   #######################################
-  # Charging Station Microservice
+  # IOT Charger Microservice
   #######################################
   delectric-iot-charger:
     build:
       context: ./iot-charger
     ports:
       - "5002:5002"
+    depends_on:
+      - Delectric-mysql
+    environment:      
+      - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/ # Pointed to chargingstationdb
+    networks:
+      - delectric-network
+
+  #######################################
+  # IOT Charger Microservice
+  #######################################
+  delectric-payment:
+    build:
+      context: ./payment
+    ports:
+      - "5003:5003"
     depends_on:
       - Delectric-mysql
     environment:      
@@ -133,3 +149,50 @@ services:
   #     - "8446:8446" # Dev Portal. Listens for HTTP traffic, assuming Dev Portal is enabled.
   #     - "8004:8004" # Dev Portal /files traffic over HTTPS, assuming the Dev Portal is enabled.
   #     - "8447:8447" # Dev Portal /files traffic over HTTPS, assuming the Dev Portal is enabled.
+
+  # rabbitmq:
+  #   image: "rabbitmq:latest"
+  #   ports:
+  #     - "5672:5672"
+  #     - "15672:15672"
+  #   hostname: rabbitmq
+
+  ####################################
+  # RabbitMQ: The messaging broker   
+  ####################################
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   restart: always
+  #   ports:
+  #     - "5672:5672"
+  #     - "15672:15672"
+  #   volumes: 
+  #     - ./rabbitmq.config:/etc/rabbitmq/rabbitmq.config
+  #     - ./rabbitmq_definitions.json:/etc/rabbitmq/rabbitmq_definitions.json
+  #     - rabbitmq_data:/var/lib/rabbitmq
+
+  # web:
+  #   build: .
+  #   command: flask run --host=0.0.0.0
+  #   volumes:
+  #     - .:/code
+  #   ports:
+  #     - "5000:5000"
+  #   depends_on:
+  #     - rabbitmq
+  #   environment:
+  #     - FLASK_APP=app.py
+  #     - FLASK_ENV=development
+  #     - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+
+  # celery_worker:
+  #   build: 
+  #     context: ./iot-charger
+  #   command: celery -A app.celery worker --loglevel=info
+  #   environment:
+  #     - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+  #     - CELERY_RESULT_BACKEND=rpc://
+  #   depends_on:
+  #     - rabbitmq
+  #   networks:
+  #     - delectric-network

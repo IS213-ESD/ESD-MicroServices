@@ -6,7 +6,7 @@ class IotCharger(db.Model):
     __tablename__ = 'iotcharger'
 
     iot_charger_id = db.Column(db.Integer, primary_key=True)
-    status = db.Column(db.String(10), nullable=False, default='Vacant')
+    status = db.Column(db.String(15), nullable=False, default='Disconnected')
     charger_id = db.Column(db.Integer, nullable=False) #foreign key?
     
     def json(self):
