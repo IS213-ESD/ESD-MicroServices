@@ -119,12 +119,12 @@ services:
     depends_on:
       - Delectric-mysql
     environment:      
-      - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/ # Pointed to chargingstationdb
+      - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/ 
     networks:
       - delectric-network
 
   #######################################
-  # IOT Charger Microservice
+  # Payment Microservice
   #######################################
   delectric-payment:
     build:
@@ -134,7 +134,8 @@ services:
     depends_on:
       - Delectric-mysql
     environment:      
-      - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/ # Pointed to chargingstationdb
+      - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/ 
+      - STRIPE_API_KEY=${STRIPE_API_KEY}
     networks:
       - delectric-network
 
