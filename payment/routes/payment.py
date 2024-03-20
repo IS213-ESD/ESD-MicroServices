@@ -1,35 +1,102 @@
 from flask import Flask, request, jsonify, Blueprint, jsonify
 from models import Payment, db
 from sqlalchemy import text, func
-
+import stripe
 
 payment_bp = Blueprint('payment', __name__)
 
-@payment.route("/payments")
+stripe.api_key = 'sk_test_51OwHUt03o249Di9WnSgmzSBmZBdUxK9WgKbeZsN2wYCH77kVbsSLLRInX62kMck8KJKdEgk4LSwOxK4OqvGJOBBN00bhAiNZj6'
+
+@payment_bp.route("/payments")
 def get_all_payments():
-    iot_charger_list = IotCharger.query.all()
-    return jsonify({"chargers": [iot_charger.json() for iot_charger in iot_charger_list]})
+    payment_list = Payment.query.all()
+    return jsonify({"payments": [payment.json() for payment in payment_list]})
 
-@payment.route("/payment-status/<string:isbn13>")
-def find_by_isbn13(isbn13):
-    book = db.session.scalars(
-        db.select(Book).filter_by(isbn13=isbn13).
-        limit(1)
-).first()
+@payment_bp.route("/payment-status/<int:payment_id>")
+def find_by_id(payment_id):
+    payment = Payment.query.filter_by(payment_id=payment_id).first()
 
-    if book:
+    if payment:
         return jsonify(
             {
                 "code": 200,
-                "data": book.json()
+                "data": payment.json()
             }
         )
     return jsonify(
         {
             "code": 404,
-            "message": "Book not found."
+            "message": "Payment not found."
         }
     ), 404
+
+@payment_bp.route("/create-payment", methods=['POST'])
+def create_payment():
+    data = request.get_json()
+    try:
+        # Create a payment with Stripe
+        payment = stripe.PaymentIntent.create(
+            amount=data['amount'],
+            currency='sgd',
+            payment_method="pm_card_visa"
+        )
+
+        # Save the payment details to your database
+        new_payment = Payment(
+            amount=data['amount'],
+            is_successful=True  # Assuming the payment is successful if it reaches this point
+        )
+        db.session.add(new_payment)
+        db.session.commit()
+
+        return jsonify({"message": "Payment successful", "payment_id": new_payment.payment_id}), 200
+
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+    
+@payment_bp.route("/create-refund", methods=['POST'])
+def create_refund():
+    data = request.get_json()
+    try:
+        # Create a payment with Stripe
+        refund = stripe.PaymentIntent.create(
+            payment_intent=data['payment_id'],
+            amount=data['amount']
+        )
+
+        # # Save the payment details to your database
+        # new_payment = Payment(
+        #     amount=data['amount'],
+        #     is_successful=True  # Assuming the payment is successful if it reaches this point
+        # )
+        # db.session.add(new_payment)
+        # db.session.commit()
+
+        return jsonify({"message": "Refund successful"}), 200
+
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+
+# funciton to post to call to stripe api
+# @payment_bp.route("/payment-status/<int:payment_id>")
+# def find_by_id(payment_id):
+#     payment = Payment.query.filter_by(payment_id=payment_id).first()
+
+#     if payment:
+#         return jsonify(
+#             {
+#                 "code": 200,
+#                 "data": payment.json()
+#             }
+#         )
+#     return jsonify(
+#         {
+#             "code": 404,
+#             "message": "Payment not found."
+#         }
+#     ), 404
+
 
 
 # @charging_station_bp.route("/nearby-chargers", methods=['GET'])
