@@ -17,12 +17,7 @@ class Payment(db.Model):
             'payment_id': self.payment_id,
             'amount': self.amount,
             'is_successful': self.is_successful,
-            # 'transaction_date': self.transaction_date.isoformat(), # if using datetime
-            # 'method': self.method
         }
 
         return dto
 
-# Remember to create the tables in the database
-# This should be done in the main application context
-# db.create_all()

@@ -2,10 +2,11 @@ from flask import Flask, request, jsonify, Blueprint, jsonify
 from models import Payment, db
 from sqlalchemy import text, func
 import stripe
+import os
 
 payment_bp = Blueprint('payment', __name__)
 
-stripe.api_key = 'sk_test_51OwHUt03o249Di9WnSgmzSBmZBdUxK9WgKbeZsN2wYCH77kVbsSLLRInX62kMck8KJKdEgk4LSwOxK4OqvGJOBBN00bhAiNZj6'
+stripe.api_key = os.getenv('STRIPE_API_KEY')
 
 @payment_bp.route("/payments")
 def get_all_payments():
