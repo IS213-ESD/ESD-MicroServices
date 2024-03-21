@@ -37,7 +37,7 @@ services:
       - "5001:5001"
     depends_on:
       - Delectric-mysql
-    environment:      
+    environment:     
       - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/ # Pointed to chargingstationdb
     networks:
       - delectric-network
@@ -53,6 +53,7 @@ services:
     depends_on:
       - Delectric-mysql
     environment:      
+      - rabbitMQ=${rabbitMQ} 
       - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/ 
     networks:
       - delectric-network
@@ -72,6 +73,36 @@ services:
       - STRIPE_API_KEY=${STRIPE_API_KEY}
     networks:
       - delectric-network
+
+  ####################################
+  # RabbitMQ: The messaging broker   
+  ####################################
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes: 
+      - ./rabbitmq.config:/etc/rabbitmq/rabbitmq.config
+      - ./rabbitmq_definitions.json:/etc/rabbitmq/rabbitmq_definitions.json
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - delectric-network
+
+  worker:
+    build:
+      context: ./iot-charger
+    command: celery -A celery_worker.celery worker --loglevel=info
+    volumes:
+      - ".:/code"
+    depends_on:
+      - rabbitmq
+    networks:
+      - delectric-network
+    environment:
+      - rabbitMQ=${rabbitMQ}
+      - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/ 
 
   # #######################################
   # #          KONG CREATION              #
@@ -158,42 +189,7 @@ services:
   #     - "15672:15672"
   #   hostname: rabbitmq
 
-  ####################################
-  # RabbitMQ: The messaging broker   
-  ####################################
-  # rabbitmq:
-  #   image: rabbitmq:3-management
-  #   restart: always
-  #   ports:
-  #     - "5672:5672"
-  #     - "15672:15672"
-  #   volumes: 
-  #     - ./rabbitmq.config:/etc/rabbitmq/rabbitmq.config
-  #     - ./rabbitmq_definitions.json:/etc/rabbitmq/rabbitmq_definitions.json
-  #     - rabbitmq_data:/var/lib/rabbitmq
 
-  # web:
-  #   build: .
-  #   command: flask run --host=0.0.0.0
-  #   volumes:
-  #     - .:/code
-  #   ports:
-  #     - "5000:5000"
-  #   depends_on:
-  #     - rabbitmq
-  #   environment:
-  #     - FLASK_APP=app.py
-  #     - FLASK_ENV=development
-  #     - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
 
-  # celery_worker:
-  #   build: 
-  #     context: ./iot-charger
-  #   command: celery -A app.celery worker --loglevel=info
-  #   environment:
-  #     - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
-  #     - CELERY_RESULT_BACKEND=rpc://
-  #   depends_on:
-  #     - rabbitmq
-  #   networks:
-  #     - delectric-network
+
+

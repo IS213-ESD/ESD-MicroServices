@@ -7,7 +7,7 @@ class IotCharger(db.Model):
 
     iot_charger_id = db.Column(db.Integer, primary_key=True)
     status = db.Column(db.String(15), nullable=False, default='Disconnected')
-    charger_id = db.Column(db.Integer, nullable=False) #foreign key?
+    charger_id = db.Column(db.Integer, nullable=False) 
     
     def json(self):
         dto = {
