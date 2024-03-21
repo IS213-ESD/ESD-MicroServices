@@ -3,16 +3,17 @@ USE paymentdb;
 
 CREATE TABLE IF NOT EXISTS payment (
   payment_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  stripe_id VARCHAR(50) UNIQUE NOT NULL,
   amount FLOAT NOT NULL,
-  is_successful TINYINT(1) NOT NULL DEFAULT 0
+  status VARCHAR(20) NOT NULL DEFAULT 'incomplete'
 );
 
 -- INSERT DUMMY DATA
-INSERT INTO payment (amount, is_successful)
+INSERT INTO payment (stripe_id, amount, status)
 VALUES
-  (23.50,FALSE), 
-  (11.90,TRUE), 
-  (20,TRUE); 
+  ("pi_3OwIey03o249Di9W1RPuCwHA",23.50,'complete'), 
+  ("pi_3OwIey03o249Di9W1RPuCwHB",11.90,'incomplete'), 
+  ("pi_3OwIey03o249Di9W1RPuCwHC",20.00,'refunded'); 
 
 
 -- FUNCTIONS
