@@ -48,7 +48,12 @@ def get_nearby_chargers():
                 distance = geodesic(user_coords, charger_coords).kilometers
 
                 if distance <= radius:
-                    nearby_chargers.append(charger.json())
+                    # charger['distance']
+                    nearby_chargers.append({**charger.json(),
+                        "distance": round(distance, 2)
+                    })
+                # print(charger['latitude'])
+                # print(charger.json())
         return jsonify({'nearby_chargers': nearby_chargers})
 
     except ValueError as ve:
@@ -87,7 +92,9 @@ def get_nearby_stations():
                 distance = geodesic(user_coords, charger_coords).kilometers
 
                 if distance <= radius:
-                    nearby_stations.append(charger.json())
+                    nearby_stations.append({**charger.json(),
+                        "distance": round(distance, 2)
+                    })
         return jsonify({"code": 200, "data": {"nearby_stations": nearby_stations}})
     except Exception as e:
         return jsonify({"code": 500, "message": f"Error: {str(e)}"}), 500
