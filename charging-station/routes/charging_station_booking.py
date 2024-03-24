@@ -26,6 +26,14 @@ def get_charging_station_bookings_by_user(user_id):
     # Return the JSON response
     return jsonify(bookings_json)
 
+@charging_station_booking_bp.route('/booking/<int:booking_id>', methods=['GET'])
+def get_charging_station_bookings_by_booking(booking_id):
+    booking = ChargingStationBooking.query.filter_by(booking_id=booking_id).first()
+    # Convert booking objects to JSON-compatible format
+    bookings_json = booking.json()
+    # Return the JSON response
+    return jsonify(bookings_json)
+
 @charging_station_booking_bp.route('/create_booking', methods=['POST'])
 def create_booking():
     # Parse request data
