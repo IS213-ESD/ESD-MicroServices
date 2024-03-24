@@ -37,7 +37,7 @@ services:
     depends_on:
       - Delectric-mysql
     environment:      
-      - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/ # Pointed to chargingstationdb
+      - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/
     networks:
       - delectric-network
 
@@ -48,11 +48,17 @@ services:
     build:
       context: ./user
     ports:
-      - "5002:5002"
+      - "5002:5001"
     depends_on:
       - Delectric-mysql
     environment:      
-      - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/ # Pointed to chargingstationdb
+      - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/
+      - FIREBASE_API=${FIREBASE_API}
+      - AUTHDOMAIN=${AUTHDOMAIN}
+      - PROJECTID=${PROJECTID}
+      - STORAGEBUCKET=${STORAGEBUCKET}
+      - MESSAGINGSENDERID=${MESSAGINGSENDERID}
+      - APPID=${APPID}
     networks:
       - delectric-network
 

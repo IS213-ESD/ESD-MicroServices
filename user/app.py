@@ -17,5 +17,5 @@ app.register_blueprint(users_bp)
 
 if __name__ == '__main__':
     print("This is flask for " + os.path.basename(__file__) + ": manage users ...")
-    app.run(host='0.0.0.0', port=5002, debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True)
 
