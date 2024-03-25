@@ -74,6 +74,28 @@ services:
     networks:
       - delectric-network
 
+  #######################################
+  # Payment Microservice
+  #######################################
+  delectric-book_charger:
+    build:
+      context: ./book-charging-station
+    restart: always
+    depends_on:
+      - delectric-payment
+    environment:
+      # rabbit_host: rabbitmq
+      # rabbit_port: 5672
+      payment_URL: http://delectric-payment:5003/create-payment
+      booking_URL: http://delectric-charging-station:5001/bookings
+      station_URL: http://delectric-payment:5001/create-payment
+      # shipping_record_URL: http://shipping_record:5002/shipping_record 
+      PYTHONUNBUFFERED: 1
+    ports:
+      - "5004:5004"
+    networks:
+      - delectric-network
+
   ####################################
   # RabbitMQ: The messaging broker   
   ####################################
