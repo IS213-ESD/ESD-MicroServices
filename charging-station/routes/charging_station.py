@@ -98,3 +98,54 @@ def get_nearby_stations():
         return jsonify({"code": 200, "data": {"nearby_stations": nearby_stations}})
     except Exception as e:
         return jsonify({"code": 500, "message": f"Error: {str(e)}"}), 500
+    
+
+# Charging-station status update
+@charging_station_bp.route('/update-charging-status/<int:charger_id>', methods=['PUT'])
+def update_charging_status(charger_id):
+    try:
+        charger = ChargingStation.query.get(charger_id)
+        if not charger:
+            return jsonify({'error': 'Charging station not found'}), 404
+        
+        # Get new charging status from request data
+        charging_status = request.json.get('charging_status')
+        if charging_status is None:
+            return jsonify({'error': 'Missing charging_status parameter'}), 400
+        
+        # Update charging status
+        charger.charging_status = charging_status
+        charger.modified = datetime.datetime.now()
+        
+        # Commit changes to the database
+        db.session.commit()
+        
+        return jsonify({'message': 'Charging status updated successfully'}), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@charging_station_bp.route('/remove-charging-status/<int:charger_id>', methods=['PUT'])
+def remove_charging_status(charger_id):
+    try:
+        charger = ChargingStation.query.get(charger_id)
+        if not charger:
+            return jsonify({'error': 'Charging station not found'}), 404
+        
+        # Get new charging status from request data
+        charging_status = 'Not Charging'
+        if charging_status is None:
+            return jsonify({'error': 'Missing charging_status parameter'}), 400
+        
+        # Update charging status
+        charger.charging_status = charging_status
+        charger.modified = datetime.datetime.now()
+        
+        # Commit changes to the database
+        db.session.commit()
+        
+        return jsonify({'message': 'Charging status updated successfully'}), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
