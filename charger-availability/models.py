@@ -1,6 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-import base64
 
 db = SQLAlchemy()
 
@@ -9,27 +8,23 @@ class ChargingStation(db.Model):
 
     charger_id = db.Column(db.Integer, primary_key=True)
     charger_name = db.Column(db.String(30), nullable=False)
-    charger_location = db.Column(db.String(100), nullable=False)
-    charger_image = db.Column(db.Text, nullable=True)  # Base64 image
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(10), nullable=False, default='UP')
     created = db.Column(db.DateTime, nullable=False, default=datetime.now)
     modified = db.Column(db.DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
-    charging_status = db.Column(db.String(20), nullable=False, default='Not Charging')
+
     def json(self):
         dto = {
             'charger_id': self.charger_id,
             'charger_name': self.charger_name,
-            'charger_location': self.charger_location,
-            'charger_image': self.charger_image,  # Include charger image
             'latitude': self.latitude,
             'longitude': self.longitude,
             'status': self.status,
             'created': self.created.strftime("%Y-%m-%d %H:%M:%S"),  # format the datetime
-            'modified': self.modified.strftime("%Y-%m-%d %H:%M:%S"),  # format the datetime
-            'charging_status': self.charging_status
+            'modified': self.modified.strftime("%Y-%m-%d %H:%M:%S")  # format the datetime
         }
+
         return dto
     
     
