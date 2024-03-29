@@ -24,7 +24,7 @@ def book_charger():
             booking_result = processBookCharger(info)
             print('\n------------------------')
             print('\nresult: ', booking_result)
-            return jsonify(booking_result), booking_result["code"]
+            return jsonify(booking_result), 200
             # Check if the booking_result indicates an error
 
         except Exception as e:
@@ -36,7 +36,7 @@ def book_charger():
 
             return jsonify({
                 "code": 500,
-                "message": "place_order.py internal error: " + ex_str
+                "message": "book_charger.py internal error: " + ex_str
             }), 500
 
     # if reached here, not a JSON request.
@@ -64,10 +64,11 @@ def processBookCharger(info):
         #update charging status to occupied
         print('\n\n-----Invoking update charger microservice-----')
         charger_id = request.json.get('charger_id')
-        invoke_http(station_URL+charger_id, method="POST", json={'charging_status':50})
+        invoke_http(station_URL + str(charger_id), method="PUT", json={'charging_status': 50})
         print('\n\n-----Invoking update notification microservice-----')
         #to be completed
-        #return status
+        return {"message": "Booking completed!"}
+
 
     
 
