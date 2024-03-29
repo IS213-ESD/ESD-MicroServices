@@ -109,13 +109,34 @@ services:
         - rabbitmq_data:/var/lib/rabbitmq # Persist RabbitMQ data
 
   #######################################
+  # User Microservice
+  #######################################
+  # user:
+  #   build:
+  #     context: ./user
+  #   ports:
+  #     - "5002:5001"
+  #   depends_on:
+  #     - Delectric-mysql
+  #   environment:      
+  #     - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/
+  #     - FIREBASE_API=${FIREBASE_API}
+  #     - AUTHDOMAIN=${AUTHDOMAIN}
+  #     - PROJECTID=${PROJECTID}
+  #     - STORAGEBUCKET=${STORAGEBUCKET}
+  #     - MESSAGINGSENDERID=${MESSAGINGSENDERID}
+  #     - APPID=${APPID}
+  #   networks:
+  #     - delectric-network
+
+  #######################################
   # IOT Charger Microservice
   #######################################
   delectric-iot-charger:
     build:
       context: ./iot-charger
     ports:
-      - "5005:5002"
+      - "5002:5002"
     depends_on:
       - Delectric-mysql
     environment:      
@@ -141,7 +162,7 @@ services:
       - delectric-network
 
   #######################################
-  # Payment Microservice
+  # Complex Book charger Microservice
   #######################################
   delectric-book_charger:
     build:
@@ -152,13 +173,12 @@ services:
     environment:
       # rabbit_host: rabbitmq
       # rabbit_port: 5672
-      payment_URL: http://delectric-payment:5003/create-payment
+      payment_URL: http://delectric-payment:5004/create-payment
       booking_URL: http://delectric-charging-station:5001/bookings
-      station_URL: http://delectric-payment:5001/create-payment
-      # shipping_record_URL: http://shipping_record:5002/shipping_record 
+      station_URL: http://delectric-charging-station:5001/update-charging-status/
       PYTHONUNBUFFERED: 1
     ports:
-      - "5004:5004"
+      - "5005:5005"
     networks:
       - delectric-network
 

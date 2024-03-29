@@ -16,7 +16,6 @@ def get_all_payments():
 @payment_bp.route("/payment-status/<int:payment_id>")
 def find_by_id(payment_id):
     payment = Payment.query.filter_by(payment_id=payment_id).first()
-
     if payment:
         return jsonify(
             {
@@ -79,7 +78,7 @@ def create_refund():
     payment = Payment.query.filter_by(payment_id=data['payment_id']).first()
     if data and payment.status == 'complete':
         try:
-        # Create a payment with Stripe
+        # Create a refund with Stripe
             refund = stripe.Refund.create(
                 payment_intent=payment.stripe_id,
                 amount=int((payment.amount * 100) * 0.3)
