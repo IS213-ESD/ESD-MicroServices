@@ -126,8 +126,8 @@ services:
       - "5672:5672"
       - "15672:15672"
     volumes: 
-      - ./rabbitmq.config:/etc/rabbitmq/rabbitmq.config
-      - ./rabbitmq_definitions.json:/etc/rabbitmq/rabbitmq_definitions.json
+      # - ./rabbitmq.config:/etc/rabbitmq/rabbitmq.config
+      # - ./rabbitmq_definitions.json:/etc/rabbitmq/rabbitmq_definitions.json
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - delectric-network

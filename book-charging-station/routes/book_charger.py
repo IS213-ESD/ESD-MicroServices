@@ -6,8 +6,8 @@ import os, sys
 
 book_charger_bp = Blueprint('book_charger', __name__)
 
-booking_URL = "http://delectric-charging-station:5001/create_booking"
-station_URL = "http://delectric-charging-station:5001/update-charging-status/"
+booking_URL = "http://delectric-charging-station:5001/charging-station-booking/create_booking"
+station_URL = "http://delectric-charging-station:5001/charging-station/update-charging-status/"
 payment_URL = "http://delectric-payment:5004/create-payment"
 
 # to invoke "Make booking" process
@@ -53,9 +53,22 @@ def processBookCharger(info):
     if booking_result.get("code") == 500:
         print('Booking failed.', booking_result.get('error'))
         print('Error:', booking_result.get('message'))
+        #return status for error
     else:
         # Invokes payment microservice if booking information is valid and pushed
         print("\nBooking completed.\n")
         print('\n\n-----Invoking payment microservice-----')
+        #placeholder for amount
         invoke_http(payment_URL, method="POST", json={'amount':1000})
         print("\nPayment submitted.\n")
+        #update charging status to occupied
+        print('\n\n-----Invoking update charger microservice-----')
+        charger_id = request.json.get('charger_id')
+        invoke_http(station_URL+charger_id, method="POST", json={'charging_status':50})
+        print('\n\n-----Invoking update notification microservice-----')
+        #to be completed
+        #return status
+
+    
+
+
