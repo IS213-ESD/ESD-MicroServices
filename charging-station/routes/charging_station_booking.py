@@ -3,23 +3,38 @@ from models import ChargingStationBooking, db
 from sqlalchemy import text, func
 import datetime
 
-charging_station_booking_bp = Blueprint('charging_station_booking', __name__)
+charging_station_booking_bp = Blueprint('charging_station_booking', __name__, url_prefix='/charging-station-booking')
 
-@charging_station_booking_bp.route("/charging-station-bookings")
+@charging_station_booking_bp.route("/")
 def get_all_bookings():
     booking_list = ChargingStationBooking.query.all()
     return jsonify({"bookings": [booking.json() for booking in booking_list]})
 
-@charging_station_booking_bp.route('/charging-station-bookings/<int:charger_id>', methods=['GET'])
-def get_charging_station_bookings(charger_id):
+@charging_station_booking_bp.route('/charger/<int:charger_id>', methods=['GET'])
+def get_charging_station_bookings_by_charger(charger_id):
     bookings = ChargingStationBooking.query.filter_by(charger_id=charger_id, booking_status="IN_PROGRESS").all()
     # Convert booking objects to JSON-compatible format
     bookings_json = [booking.json() for booking in bookings]
     # Return the JSON response
     return jsonify(bookings_json)
 
+@charging_station_booking_bp.route('/user/<int:user_id>', methods=['GET'])
+def get_charging_station_bookings_by_user(user_id):
+    bookings = ChargingStationBooking.query.filter_by(user_id=user_id, booking_status="IN_PROGRESS").all()
+    # Convert booking objects to JSON-compatible format
+    bookings_json = [booking.json() for booking in bookings]
+    # Return the JSON response
+    return jsonify(bookings_json)
 
-@charging_station_booking_bp.route('/bookings', methods=['POST'])
+@charging_station_booking_bp.route('/booking/<int:booking_id>', methods=['GET'])
+def get_charging_station_bookings_by_booking(booking_id):
+    booking = ChargingStationBooking.query.filter_by(booking_id=booking_id).first()
+    # Convert booking objects to JSON-compatible format
+    bookings_json = booking.json()
+    # Return the JSON response
+    return jsonify(bookings_json)
+
+@charging_station_booking_bp.route('/create_booking', methods=['POST'])
 def create_booking():
     # Parse request data
     data = request.json
@@ -75,7 +90,7 @@ def cancel_booking():
     # Commit changes to the database
     db.session.commit()
 
-    return jsonify({'message': 'Booking cancelled successfully'}), 200
+    return jsonify({'message': 'Booking status updated successfully'}), 200
 
 
 @charging_station_booking_bp.route('/exceed_booking', methods=['POST'])
@@ -100,7 +115,7 @@ def exceed_booking():
     # Commit changes to the database
     db.session.commit()
 
-    return jsonify({'message': 'Booking cancelled successfully'}), 200
+    return jsonify({'message': 'Booking status updated successfully'}), 200
 
 
 @charging_station_booking_bp.route('/complete_booking', methods=['POST'])
@@ -125,4 +140,4 @@ def complete_booking():
     # Commit changes to the database
     db.session.commit()
 
-    return jsonify({'message': 'Booking cancelled successfully'}), 200
+    return jsonify({'message': 'Booking status updated successfully'}), 200

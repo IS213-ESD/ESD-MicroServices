@@ -4,20 +4,22 @@ USE chargingstationdb;
 CREATE TABLE IF NOT EXISTS chargingstation (
   charger_id INT AUTO_INCREMENT PRIMARY KEY,
   charger_name VARCHAR(30) NOT NULL,
+  charger_location VARCHAR(100) NOT NULL,
   latitude DOUBLE PRECISION NOT NULL,
   longitude DOUBLE PRECISION NOT NULL,
   status VARCHAR(10) NOT NULL DEFAULT 'UP',
+  charger_image TEXT,  -- Add charger_image field
   created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  modified TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  modified TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  charging_status VARCHAR(20) NOT NULL DEFAULT 'Not Charging'
 );
 
 -- INSERT DUMMY DATA
-INSERT INTO chargingstation (charger_name, latitude, longitude, status)
+INSERT INTO chargingstation (charger_name, charger_location, latitude, longitude, status, charger_image)
 VALUES
-  ('Station A', 1.3550, 103.8257, 'UP'),  -- Approximately 1 km from Singapore center
-  ('Station B', 1.3455, 103.8228, 'DOWN'),  -- Approximately 2 km from Singapore center
-  ('Station C', 1.3605, 103.8275, 'UP');  -- Approximately 3 km from Singapore center
-
+  ('Station A', 'Location A', 1.3550, 103.8257, 'UP', 'charger_dummy.jpg'),  -- Approximately 1 km from Singapore center
+  ('Station B', 'Location B', 1.3455, 103.8228, 'DOWN', 'charger_dummy.jpg'),  -- Approximately 2 km from Singapore center
+  ('Station C', 'Location C', 1.3605, 103.8275, 'UP', 'charger_dummy.jpg');  -- Approximately 3 km from Singapore center
 
 -- Bookings
 -- Create ChargingStationBooking table

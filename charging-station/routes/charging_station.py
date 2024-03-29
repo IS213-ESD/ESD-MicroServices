@@ -1,11 +1,19 @@
-from flask import Flask, request, jsonify, Blueprint, jsonify
+from flask import Flask, request, jsonify, Blueprint, jsonify, send_from_directory
 from models import ChargingStation, ChargingStationBooking, db
 from sqlalchemy import text, func
 import datetime
 from geopy.distance import geodesic
 
 
-charging_station_bp = Blueprint('charging_station', __name__)
+charging_station_bp = Blueprint('charging_station', __name__, url_prefix='/charging-station')
+
+
+@charging_station_bp.route('/images/<image_filename>')
+def get_charger_image(image_filename):
+    # Replace 'charger_images' with the path to your directory containing charger images
+    directory = 'images'
+    return send_from_directory(directory, image_filename)
+
 
 @charging_station_bp.route("/chargers")
 def get_all_chargers():
@@ -40,15 +48,12 @@ def get_nearby_chargers():
                 distance = geodesic(user_coords, charger_coords).kilometers
 
                 if distance <= radius:
-                    nearby_chargers.append({
-                        'charger_id': charger.charger_id,
-                        'charger_name': charger.charger_name,
-                        'latitude': charger.latitude,
-                        'longitude': charger.longitude,
-                        'distance': distance,
-                        'status': charger.status
+                    # charger['distance']
+                    nearby_chargers.append({**charger.json(),
+                        "distance": round(distance, 2)
                     })
-
+                # print(charger['latitude'])
+                # print(charger.json())
         return jsonify({'nearby_chargers': nearby_chargers})
 
     except ValueError as ve:
@@ -87,14 +92,60 @@ def get_nearby_stations():
                 distance = geodesic(user_coords, charger_coords).kilometers
 
                 if distance <= radius:
-                    nearby_stations.append({
-                        'charger_id': charger.charger_id,
-                        'charger_name': charger.charger_name,
-                        'latitude': charger.latitude,
-                        'longitude': charger.longitude,
-                        'distance': distance,
-                        'status': charger.status
+                    nearby_stations.append({**charger.json(),
+                        "distance": round(distance, 2)
                     })
         return jsonify({"code": 200, "data": {"nearby_stations": nearby_stations}})
     except Exception as e:
         return jsonify({"code": 500, "message": f"Error: {str(e)}"}), 500
+    
+
+# Charging-station status update
+@charging_station_bp.route('/update-charging-status/<int:charger_id>', methods=['PUT'])
+def update_charging_status(charger_id):
+    try:
+        charger = ChargingStation.query.get(charger_id)
+        if not charger:
+            return jsonify({'error': 'Charging station not found'}), 404
+        
+        # Get new charging status from request data
+        charging_status = request.json.get('charging_status')
+        if charging_status is None:
+            return jsonify({'error': 'Missing charging_status parameter'}), 400
+        
+        # Update charging status
+        charger.charging_status = charging_status
+        charger.modified = datetime.datetime.now()
+        
+        # Commit changes to the database
+        db.session.commit()
+        
+        return jsonify({'message': 'Charging status updated successfully'}), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@charging_station_bp.route('/remove-charging-status/<int:charger_id>', methods=['PUT'])
+def remove_charging_status(charger_id):
+    try:
+        charger = ChargingStation.query.get(charger_id)
+        if not charger:
+            return jsonify({'error': 'Charging station not found'}), 404
+        
+        # Get new charging status from request data
+        charging_status = 'Not Charging'
+        if charging_status is None:
+            return jsonify({'error': 'Missing charging_status parameter'}), 400
+        
+        # Update charging status
+        charger.charging_status = charging_status
+        charger.modified = datetime.datetime.now()
+        
+        # Commit changes to the database
+        db.session.commit()
+        
+        return jsonify({'message': 'Charging status updated successfully'}), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
