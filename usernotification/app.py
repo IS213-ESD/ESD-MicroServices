@@ -13,5 +13,4 @@ app.register_blueprint(notif_bp)
 
 if __name__ == '__main__':
     print("This is flask for " + os.path.basename(__file__) + ": send notifications to user ...")
-    app.run(host='0.0.0.0', port=5001, debug=True)
-
+    app.run(host='0.0.0.0', port=5003, debug=True)

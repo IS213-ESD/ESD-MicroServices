@@ -1,16 +1,16 @@
 from flask import Flask, request, jsonify, Blueprint, jsonify
 from models import ChargingStationBooking, db
-from sqlalchemy import text, func
 import datetime
 import requests
+import os
 
 handle_booking_bp = Blueprint('booking_complex', __name__, url_prefix='/booking-complex')
 
 
 @handle_booking_bp.route('/user/<int:user_id>', methods=['GET'])
 def get_user_booking_chargers(user_id):
-    CHARGING_STATION_URL = 'http://localhost:5001/charging-station/chargers'
-    BOOKING_USER_URL = f'http://localhost:5001/charging-station-booking/user/{user_id}'
+    CHARGING_STATION_URL = os.getenv('CHARGING_STATION_URL')
+    BOOKING_USER_URL = os.getenv('BOOKING_USER_URL') + f'{user_id}'
     try:
         chargers_response = requests.get(CHARGING_STATION_URL)
         booking_response = requests.get(BOOKING_USER_URL)
@@ -40,8 +40,8 @@ def post_cancel_booking():
     booking_id = request.json.get('booking_id')
     user_id = request.json.get('user_id')
 
-    BOOKING_BOOKING_URL = f'http://localhost:5001/charging-station-booking/booking/{booking_id}'
-    CANCEL_BOOKING_URL = 'http://localhost:5001/charging-station-booking/cancel_booking'
+    BOOKING_BOOKING_URL = os.getenv('BOOKING_BOOKING_URL') + f'{booking_id}'
+    CANCEL_BOOKING_URL = os.getenv('CANCEL_BOOKING_URL')
     try:
         booking_response = requests.get(BOOKING_BOOKING_URL)
         if booking_response.status_code != 200:
@@ -67,8 +67,8 @@ def post_end_booking():
     booking_id = request.json.get('booking_id')
     user_id = request.json.get('user_id')
 
-    BOOKING_BOOKING_URL = f'http://localhost:5001/charging-station-booking/booking/{booking_id}'
-    COMPLETE_BOOKING_URL = 'http://localhost:5001/charging-station-booking/complete_booking'
+    BOOKING_BOOKING_URL = os.getenv('BOOKING_BOOKING_URL')  + f'{booking_id}'
+    COMPLETE_BOOKING_URL = os.getenv('COMPLETE_BOOKING_URL')
 
     try:
         booking_response = requests.get(BOOKING_BOOKING_URL)

@@ -2,11 +2,11 @@ import os
 from flask import Flask
 from flask_cors import CORS
 
+
 from config import Config
 from models import db
 from routes.charging_station import charging_station_bp
 from routes.charging_station_booking import charging_station_booking_bp
-
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
