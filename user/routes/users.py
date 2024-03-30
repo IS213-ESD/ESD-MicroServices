@@ -11,13 +11,14 @@ def signup():
     try:
         # Get user registration data from request body
         data = request.json
-        required_fields = ["email", "password"]
+        required_fields = ["email", "password", "phone"]
         # Check if all required fields are present
         if not all(field in data for field in required_fields):
             return jsonify({"message": "Missing required fields"}), 400
         else:
             email = data["email"]
             password = data["password"]
+            phone = data["phone"]
             # Create user account in Firebase Authentication
             user = auth.create_user_with_email_and_password(
                 email=email,
@@ -26,7 +27,8 @@ def signup():
             if user:
                 new_user = User(
                     user_id = user['localId'],
-                    email=email
+                    email=email,
+                    phone=phone
                 )
         
                 # Add user to database

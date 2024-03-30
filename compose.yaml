@@ -64,6 +64,21 @@ services:
       - delectric-network
 
   #######################################
+  # User Notification Service
+  #######################################
+  usernotification:
+    build:
+      context: ./usernotification
+    ports:
+      - "5003:5001"
+    environment:    
+      ACCOUNT_SID: '${ACCOUNT_SID}'
+      AUTH_TOKEN: '${AUTH_TOKEN}'
+      TWILIO_NUM: '${TWILIO_NUM}'
+    networks:
+      - delectric-network
+
+  #######################################
   # Complex-Micro Service
   #######################################
   delectric-complex-handle-bookings:
@@ -73,13 +88,12 @@ services:
       - "5101:5001"
     depends_on:
       - Delectric-mysql
+      - user
+      - delectric-charging-station
     environment:      
       - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/
     networks:
       - delectric-network
-    depends_on:
-      - user
-      - delectric-charging-station
 
   #######################################
   # Complex-Micro Service
