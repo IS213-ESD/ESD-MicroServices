@@ -13,6 +13,24 @@ def get_all_payments():
     payment_list = Payment.query.all()
     return jsonify({"payments": [payment.json() for payment in payment_list]})
 
+# will take in card details and create a payment method that can be used for future payments
+@payment_bp.route('/create-payment-method', methods=['POST'])
+def create_payment_method():
+    try:
+        data = request.get_json()
+        payment_method = stripe.PaymentMethod.create(
+            type="card",
+            card={
+                "number": data['number'],
+                "exp_month": data['exp_month'],
+                "exp_year": data['exp_year'],
+                "cvc": data['cvc'],
+            },
+        )
+        return jsonify({"payment_method_id": payment_method.id}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 @payment_bp.route("/payment-status/<int:payment_id>")
 def find_by_id(payment_id):
     payment = Payment.query.filter_by(payment_id=payment_id).first()
@@ -30,6 +48,7 @@ def find_by_id(payment_id):
         }
     ), 404
 
+# takes in payment method and amount to post payment to stripe
 @payment_bp.route("/create-payment", methods=['POST'])
 def create_payment():
     data = request.get_json()
@@ -38,7 +57,7 @@ def create_payment():
         payment_intent = stripe.PaymentIntent.create(
             amount=data['amount'],
             currency='sgd',
-            payment_method="pm_card_visa",
+            payment_method=data['payment_method_id'],
             confirm=True,  
             automatic_payment_methods={
                 'enabled': True,
@@ -71,7 +90,7 @@ def create_payment():
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
-    
+# takes in payment_id to create refund from stripe
 @payment_bp.route("/create-refund", methods=['POST'])
 def create_refund():
     data = request.get_json()
