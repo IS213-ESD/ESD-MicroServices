@@ -26,10 +26,11 @@ VALUES
 CREATE TABLE IF NOT EXISTS chargingstationbooking (
   booking_id INT AUTO_INCREMENT PRIMARY KEY,
   charger_id INT NOT NULL,
-  user_id INT NOT NULL,
+  user_id VARCHAR(30) NULL,
   booking_datetime DATETIME NOT NULL,
   booking_duration_hours INT NOT NULL,
   booking_status ENUM('IN_PROGRESS', 'CANCELLED', 'COMPLETED', 'EXCEEDED') DEFAULT 'IN_PROGRESS',
+  payment_id INT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_chargingstation FOREIGN KEY (charger_id) REFERENCES chargingstation(charger_id)
@@ -38,10 +39,10 @@ CREATE TABLE IF NOT EXISTS chargingstationbooking (
 -- Populate ChargingStationBooking with dummy data
 INSERT INTO chargingstationbooking (charger_id, user_id, booking_datetime, booking_duration_hours, booking_status)
 VALUES
-  (1, 1, '2024-03-09 10:00:00', 2, 'IN_PROGRESS'),  -- Booking in progress
-  (2, 2, '2024-03-10 15:00:00', 1, 'EXCEEDED'),     -- Booking exceeded
-  (3, 3, '2024-03-11 12:00:00', 3, 'COMPLETED'),    -- Completed booking
-  (1, 2, '2024-03-12 08:00:00', 1, 'CANCELLED');    -- Cancelled booking
+  (1, "123", '2024-03-09 10:00:00', 2, 'IN_PROGRESS'),  -- Booking in progress
+  (2, "123", '2024-03-10 15:00:00', 1, 'EXCEEDED'),     -- Booking exceeded
+  (3, "123", '2024-03-11 12:00:00', 3, 'COMPLETED'),    -- Completed booking
+  (1, "123", '2024-03-12 08:00:00', 1, 'CANCELLED');    -- Cancelled booking
 
 -- CREATE TABLE IF NOT EXISTS chargingstationbooking (
 --   booking_id INT AUTO_INCREMENT PRIMARY KEY,

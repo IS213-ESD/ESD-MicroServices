@@ -38,13 +38,13 @@ class ChargingStationBooking(db.Model):
 
     booking_id = db.Column(db.Integer, primary_key=True)
     charger_id = db.Column(db.Integer, nullable=False)
-    user_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.String(30), nullable=False)
     booking_datetime = db.Column(db.DateTime, nullable=False) 
     # booking_date = db.Column(db.Date, nullable=False)
     # booking_time_start = db.Column(db.Time, nullable=False)
     booking_duration_hours = db.Column(db.Integer, nullable=False)
     booking_status = db.Column(db.Enum('IN_PROGRESS', 'CANCELLED', 'COMPLETED', 'EXCEEDED'), default='IN_PROGRESS')
-
+    payment_id = db.Column(db.Integer, nullable=False)
     def json(self):
         dto = {
             'booking_id': self.booking_id,
@@ -54,7 +54,8 @@ class ChargingStationBooking(db.Model):
             # 'booking_date': self.booking_date.strftime('%Y-%m-%d'),
             # 'booking_time_start': self.booking_time_start.strftime('%H:%M:%S'),
             'booking_duration_hours': self.booking_duration_hours,
-            'booking_status': self.booking_status
+            'booking_status': self.booking_status,
+            'payment_id': self.payment_id,
         }
 
         return dto

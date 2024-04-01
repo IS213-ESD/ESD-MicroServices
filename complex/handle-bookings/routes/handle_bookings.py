@@ -7,13 +7,14 @@ import os
 handle_booking_bp = Blueprint('booking_complex', __name__, url_prefix='/booking-complex')
 
 
-@handle_booking_bp.route('/user/<int:user_id>', methods=['GET'])
+@handle_booking_bp.route('/user/<string:user_id>', methods=['GET'])
 def get_user_booking_chargers(user_id):
     CHARGING_STATION_URL = os.getenv('CHARGING_STATION_URL')
     BOOKING_USER_URL = os.getenv('BOOKING_USER_URL') + f'{user_id}'
     try:
         chargers_response = requests.get(CHARGING_STATION_URL)
         booking_response = requests.get(BOOKING_USER_URL)
+        print(chargers_response, booking_response)
         if chargers_response.status_code != 200 or booking_response.status_code != 200:
             return jsonify({'error': 'Failed to fetch data'}), 500
 
