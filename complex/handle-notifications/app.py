@@ -3,6 +3,7 @@ from os import environ
 import pika
 import requests
 import json
+import time  # Import the time module for sleep
 
 from dotenv import load_dotenv
 
@@ -105,11 +106,24 @@ def car_collected_callback(ch, method, properties, body):
 def booking_cancellation_callback(ch, method, properties, body):
     print("Received booking cancellation notification:", body)
 
+def connect_to_rabbitmq():
+    attempts = 0
+    while True:
+        try:
+            print(f"Trying to connect to RabbitMQ (attempt {attempts + 1})")
+            credentials = pika.PlainCredentials('guest', 'guest')
+            parameters = pika.ConnectionParameters(RABBITMQHOST)
+            connection = pika.BlockingConnection(parameters)
+            return connection
+        except pika.exceptions.AMQPConnectionError as e:
+            attempts += 1
+            print(f"Failed to connect to RabbitMQ: {e}")
+            print("Retrying in 5 seconds...")
+            time.sleep(5)
+
 def main():
     print("Running Handle Notifications")
-    credentials = pika.PlainCredentials('guest', 'guest')
-    parameters = pika.ConnectionParameters(RABBITMQHOST)
-    connection = pika.BlockingConnection(parameters)
+    connection = connect_to_rabbitmq()
     channel = connection.channel()
 
     # Scenario 1: Booking Confirmation Notification

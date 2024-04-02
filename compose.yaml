@@ -188,6 +188,7 @@ services:
       - delectric-charging-station
       - delectric-user-notification
       - delectric-user
+      - rabbitmq
     environment:      
       RABBITMQHOST: rabbitmq
       USER_BASE: http://delectric-user:5002/
