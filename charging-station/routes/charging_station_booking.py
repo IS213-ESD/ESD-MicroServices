@@ -5,6 +5,8 @@ import datetime
 
 charging_station_booking_bp = Blueprint('charging_station_booking', __name__, url_prefix='/charging-station-booking')
 
+PRICE_PER_HOUR_BLOCK=10
+
 @charging_station_booking_bp.route("/")
 def get_all_bookings():
     booking_list = ChargingStationBooking.query.all()
@@ -42,7 +44,7 @@ def create_booking():
     user_id = data.get('user_id')
     booking_datetime = datetime.datetime.strptime(data.get('booking_datetime'), '%Y-%m-%d %H:%M:%S')
     booking_duration_hours = data.get('booking_duration_hours')
-    
+    booking_status = data.get('booking_status', 'PENDING')
     # Check if slot is available for booking
     is_stations_available = db.session.query(func.check_booking_overlap(
         charger_id, 
@@ -58,7 +60,8 @@ def create_booking():
         user_id=user_id,
         booking_datetime=booking_datetime,
         booking_duration_hours=booking_duration_hours,
-        booking_status='IN_PROGRESS'
+        booking_status=booking_status,
+        booking_fee=booking_duration_hours*PRICE_PER_HOUR_BLOCK
     )
     
     # # Add booking to database
@@ -66,6 +69,32 @@ def create_booking():
     db.session.commit()
     
     return jsonify({'message': 'Booking created successfully', 'booking_id': new_booking.booking_id}), 201
+
+
+@charging_station_booking_bp.route('/update_booking/<int:booking_id>', methods=['post'])
+def update_booking(booking_id):
+    # Parse request data
+    data = request.json
+    payment_id = data.get('payment_id')
+    booking_status = "IN_PROGRESS"
+
+    # Retrieve the booking from the database
+    booking = ChargingStationBooking.query.get(booking_id)
+
+    # Check if the booking exists
+    if not booking:
+        return jsonify({"error": "Booking not found"}), 404
+
+    # Update the booking with the new payment ID and booking status
+    if payment_id:
+        booking.payment_id = payment_id
+    if booking_status:
+        booking.booking_status = booking_status
+
+    # Commit changes to the database
+    db.session.commit()
+
+    return jsonify({'message': 'Booking updated successfully', 'booking_id': booking_id}), 200
 
 
 @charging_station_booking_bp.route('/cancel_booking', methods=['POST'])

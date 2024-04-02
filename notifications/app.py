@@ -1,4 +1,5 @@
 import pika
+import json
 
 def send_notification(queue_name, message):
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
@@ -10,6 +11,18 @@ def send_notification(queue_name, message):
 
 def booking_confirmation_callback(ch, method, properties, body):
     print("Received booking confirmation notification:", body)
+    # Decode the body from bytes to string
+    body_str = body.decode('utf-8')
+    
+    # Parse the JSON string into a Python dictionary
+    booking_data = json.loads(body_str)
+    
+    # Now you can access the fields of the JSON object as dictionary keys
+    print("Received booking confirmation notification:")
+    print("Booking ID:", booking_data.get('booking_id'))
+    # print("User ID:", booking_data.get('user_id'))
+    # print("Status:", booking_data.get('status'))
+    # Add more fields as needed
 
 def car_ready_callback(ch, method, properties, body):
     print("Received car ready notification:", body)

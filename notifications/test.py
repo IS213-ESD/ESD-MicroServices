@@ -10,7 +10,7 @@ def send_notification(queue_name, message):
     connection.close()
 
 
-message = {'message': 'come data for callback'}
+message = {'booking_id': '123'}
 json_message = json.dumps(message)
 print(json_message)
 send_notification('booking_confirmations', json_message)

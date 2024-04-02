@@ -53,7 +53,7 @@ def post_cancel_booking():
 
         # If user ID matches, send a POST request to cancel the booking
         cancel_booking_response = requests.post(CANCEL_BOOKING_URL, json={'booking_id': booking_id})
-        
+        # Trigger refund
         if cancel_booking_response.status_code == 200:
             return jsonify({'message': 'Booking successfully cancelled'}), 200
         else:

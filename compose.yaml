@@ -45,7 +45,7 @@ services:
   #######################################
   # User Microservice
   #######################################
-  user:
+  delectric-user:
     build:
       context: ./user
     ports:
@@ -105,13 +105,16 @@ services:
     depends_on:
       - Delectric-mysql
     environment:      
-      - rabbitMQ=${rabbitMQ} 
+      - rabbitMQ=${rabbitMQCred}@rabbitmq:5672//
       - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/ 
     networks:
       - delectric-network
 
   #######################################
   # Complex-Micro Service
+  #######################################
+  #######################################
+  # Complex: Handle Bookings
   #######################################
   delectric-complex-handle-bookings:
     build:
@@ -120,7 +123,7 @@ services:
       - "5101:5101"
     depends_on:
       - Delectric-mysql
-      - user
+      - delectric-user
       - delectric-charging-station
     environment:      
       CHARGING_STATION_URL: http://delectric-charging-station:5001/charging-station/chargers
@@ -132,36 +135,43 @@ services:
       - delectric-network
 
   #######################################
-  # Complex-Micro Service
-  #######################################
-  # delectric-rabbitmq:
-  #     image: rabbitmq:3.8-management
-  #     ports:
-  #       - "5672:5672" # RabbitMQ port
-  #       - "15672:15672" # RabbitMQ management UI port
-  #     networks:
-  #     - delectric-network
-  #     volumes:
-  #       - rabbitmq_data:/var/lib/rabbitmq # Persist RabbitMQ data
-
-  #######################################
   # Complex Book charger Microservice
   #######################################
   delectric-book_charger:
     build:
-      context: ./book-charging-station
+      context: ./complex/book-charging-station
     restart: always
     depends_on:
       - delectric-payment
     environment:
       # rabbit_host: rabbitmq
       # rabbit_port: 5672
-      payment_URL: http://delectric-payment:5004/create-payment
-      booking_URL: http://delectric-charging-station:5001/bookings
-      station_URL: http://delectric-charging-station:5001/update-charging-status/
-      PYTHONUNBUFFERED: 1
+      CHARGING_STATION_BOOKING_BASE: http://delectric-charging-station:5001/charging-station-booking
+      CHARGING_STATION_BASE: http://delectric-charging-station:5001/charging-station
+      PAYMENT_BASE: http://delectric-payment:5004/
+      USER_BASE: http://delectric-user:5002/
     ports:
       - "5102:5102"
+    networks:
+      - delectric-network
+  
+  #######################################
+  # Complex: Handle IOT Chargers
+  #######################################
+  delectric-complex-handle-iot-chargers:
+    build:
+      context: ./complex/handle-iot-chargers
+    ports:
+      - "5103:5103"
+    depends_on:
+      - Delectric-mysql
+      - delectric-charging-station
+      - delectric-iot-charger
+    environment:      
+      IOT_GET_CHARGERS_BY_ID_URL: http://delectric-iot-charger:5005/iot-chargers/
+      UPDATE_CHARGING_STATUS_URL: http://delectric-charging-station:5001/charging-station/update-charging-status/
+      REMOVE_CHARGING_STATUS_URL: http://delectric-charging-station:5001/charging-station/remove-charging-status/
+      IOT_SIMPLE_BASE: http://delectric-iot-charger:5005
     networks:
       - delectric-network
 
@@ -181,6 +191,9 @@ services:
     networks:
       - delectric-network
 
+  ####################################
+  # IOT Charger - Stand Alone
+  ####################################
   worker:
     build:
       context: ./iot-charger
@@ -192,7 +205,8 @@ services:
     networks:
       - delectric-network
     environment:
-      - rabbitMQ=${rabbitMQ}
+      - IOT_COMPLEX_BASE=http://delectric-complex-handle-iot-chargers:5103
+      - rabbitMQ=${rabbitMQCred}@rabbitmq:5672//
       - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/ 
 
   # #######################################

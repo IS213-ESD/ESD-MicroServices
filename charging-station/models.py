@@ -43,8 +43,10 @@ class ChargingStationBooking(db.Model):
     # booking_date = db.Column(db.Date, nullable=False)
     # booking_time_start = db.Column(db.Time, nullable=False)
     booking_duration_hours = db.Column(db.Integer, nullable=False)
-    booking_status = db.Column(db.Enum('IN_PROGRESS', 'CANCELLED', 'COMPLETED', 'EXCEEDED'), default='IN_PROGRESS')
+    booking_status = db.Column(db.Enum('IN_PROGRESS', 'CANCELLED', 'COMPLETED', 'EXCEEDED', 'PENDING'), default='PENDING')
     payment_id = db.Column(db.Integer, nullable=False)
+    booking_fee = db.Column(db.Numeric(10, 2), default=0)  # New field for booking fee
+    charging_fee = db.Column(db.Numeric(10, 2), default=0)  # New field for charging fee
     def json(self):
         dto = {
             'booking_id': self.booking_id,
@@ -56,6 +58,8 @@ class ChargingStationBooking(db.Model):
             'booking_duration_hours': self.booking_duration_hours,
             'booking_status': self.booking_status,
             'payment_id': self.payment_id,
+            'booking_fee': self.booking_fee,
+            'charging_fee': self.charging_fee,
         }
 
         return dto
