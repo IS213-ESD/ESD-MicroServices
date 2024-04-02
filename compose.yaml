@@ -66,7 +66,7 @@ services:
   #######################################
   # User Notification Service
   #######################################
-  usernotification:
+  delectric-user-notification:
     build:
       context: ./usernotification
     ports:
@@ -172,6 +172,28 @@ services:
       UPDATE_CHARGING_STATUS_URL: http://delectric-charging-station:5001/charging-station/update-charging-status/
       REMOVE_CHARGING_STATUS_URL: http://delectric-charging-station:5001/charging-station/remove-charging-status/
       IOT_SIMPLE_BASE: http://delectric-iot-charger:5005
+    networks:
+      - delectric-network
+  
+  #######################################
+  # Complex: Handle Notifications
+  #######################################
+  delectric-complex-handle-notification:
+    build:
+      context: ./complex/handle-notifications
+    ports:
+      - "5104:5104"
+    depends_on:
+      - Delectric-mysql
+      - delectric-charging-station
+      - delectric-user-notification
+      - delectric-user
+    environment:      
+      RABBITMQHOST: rabbitmq
+      USER_BASE: http://delectric-user:5002/
+      USER_NOTIFICATION_BASE: http://delectric-user-notification:5003/
+      CHARGING_STATION_BOOKING_BASE: http://delectric-charging-station:5001/charging-station-booking/
+      CHARGING_STATION_BASE: http://delectric-charging-station:5001/charging-station/
     networks:
       - delectric-network
 
