@@ -9,6 +9,7 @@ book_charger_bp = Blueprint('book_charger', __name__)
 booking_URL = "http://delectric-charging-station:5001/charging-station-booking/create_booking"
 station_URL = "http://delectric-charging-station:5001/charging-station/update-charging-status/"
 payment_URL = "http://delectric-payment:5004/create-payment"
+notification_URL = "http://delectric-manage-notifications:5103/send-notification"
 
 # to invoke "Make booking" process
 @book_charger_bp.route("/make-booking", methods=['POST'])
@@ -57,17 +58,23 @@ def processBookCharger(info):
     else:
         # Invokes payment microservice if booking information is valid and pushed
         print("\nBooking completed.\n")
-        print('\n\n-----Invoking payment microservice-----')
-        #placeholder for amount
-        invoke_http(payment_URL, method="POST", json={'amount':1000})
-        print("\nPayment submitted.\n")
-        #update charging status to occupied
-        print('\n\n-----Invoking update charger microservice-----')
-        charger_id = request.json.get('charger_id')
-        invoke_http(station_URL + str(charger_id), method="PUT", json={'charging_status': 50})
-        print('\n\n-----Invoking update notification microservice-----')
-        #to be completed
-        return {"message": "Booking completed!"}
+
+        try: 
+            print('\n\n-----Invoking payment microservice-----')
+            #placeholder for amount
+            invoke_http(payment_URL, method="POST", json={'amount':1000})
+            print("\nPayment submitted.\n")
+            #update charging status to occupied
+            print('\n\n-----Invoking update charger microservice-----')
+            charger_id = request.json.get('charger_id')
+            invoke_http(station_URL + str(charger_id), method="PUT", json={'charging_status': 50})
+            print('\n\n-----Invoking update notification microservice-----')
+            invoke_http(notification_URL, method='POST', json={'msg':"Booking Confirmed!",'phone':''})
+            return {"message": "Booking completed!"}
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+
 
 
     

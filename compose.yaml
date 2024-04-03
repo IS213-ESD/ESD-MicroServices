@@ -110,6 +110,22 @@ services:
     networks:
       - delectric-network
 
+  delectric-charger-availability:
+    build: 
+      context: ./charger-availability
+    ports:
+      - "5006:5006"
+    depends_on:
+      - Delectric-mysql
+      - delectric-charging-station
+    environment:
+      - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/
+      - notification_URL=http://delectric-manage-notifications:5003/send-notification
+      - notification_URL=http://user:5002/getuserdetails/
+    networks:
+      - delectric-network
+
+
   #######################################
   # Complex-Micro Service
   #######################################
@@ -149,7 +165,7 @@ services:
   #######################################
   delectric-book_charger:
     build:
-      context: ./book-charging-station
+      context: ./complex/book-charging-station
     restart: always
     depends_on:
       - delectric-payment
@@ -159,9 +175,30 @@ services:
       payment_URL: http://delectric-payment:5004/create-payment
       booking_URL: http://delectric-charging-station:5001/bookings
       station_URL: http://delectric-charging-station:5001/update-charging-status/
+      notification_URL : http://delectric-manage-notifications:5103/send-notification
+
       PYTHONUNBUFFERED: 1
     ports:
       - "5102:5102"
+    networks:
+      - delectric-network
+
+  #######################################
+  # Complex Book charger Microservice
+  #######################################
+  delectric-manage-notifications:
+    build:
+      context: ./complex/manage-notifications
+    restart: always
+    depends_on:
+      - usernotification
+    environment:
+      # rabbit_host: rabbitmq
+      # rabbit_port: 5672
+      notification_URL: http://delectric-payment:5003/sendnotification
+      PYTHONUNBUFFERED: 1
+    ports:
+      - "5103:5103"
     networks:
       - delectric-network
 

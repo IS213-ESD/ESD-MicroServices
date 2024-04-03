@@ -41,7 +41,10 @@ VALUES
   (1, 1, '2024-03-09 10:00:00', 2, 'IN_PROGRESS'),  -- Booking in progress
   (2, 2, '2024-03-10 15:00:00', 1, 'EXCEEDED'),     -- Booking exceeded
   (3, 3, '2024-03-11 12:00:00', 3, 'COMPLETED'),    -- Completed booking
-  (1, 2, '2024-03-12 08:00:00', 1, 'CANCELLED');    -- Cancelled booking
+  (1, 2, '2024-03-12 08:00:00', 1, 'CANCELLED'),    -- Cancelled booking
+  (1, 1, '2024-03-31 15:00:00', 1, 'IN_PROGRESS'),  -- Booking ending soon (ends at 15:00)
+  (2, 2, '2024-03-31 14:00:00', 1, 'IN_PROGRESS'),  -- Booking exceeded (ended at 15:00)
+  (3, 3, '2024-03-31 16:00:00', 1, 'IN_PROGRESS');  -- Booking upcoming (starts at 16:00)
 
 -- CREATE TABLE IF NOT EXISTS chargingstationbooking (
 --   booking_id INT AUTO_INCREMENT PRIMARY KEY,
