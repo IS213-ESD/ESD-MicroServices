@@ -3,6 +3,9 @@ from flask_cors import CORS
 import requests
 from invokes import invoke_http
 import os
+import datetime
+import pika
+import json
 
 book_charger_bp = Blueprint('book_charger', __name__, url_prefix='/book-charger-complex')
 
@@ -14,6 +17,7 @@ CHARGING_STATION_BOOKING_BASE = os.getenv('CHARGING_STATION_BOOKING_BASE')
 CHARGING_STATION_BASE = os.getenv('CHARGING_STATION_BASE')
 PAYMENT_BASE = os.getenv('PAYMENT_BASE')
 USER_BASE_URL = os.getenv('USER_BASE')
+RABBITMQHOST = os.getenv('RABBITMQHOST')
 
 @book_charger_bp.route("/book-charger", methods=['POST'])
 def book_charger():
@@ -65,6 +69,10 @@ def book_charger():
             "payment_id": payment_id
         }
         payment_response = requests.post(update_booking_url, json=update_booking_data)
+        message = {'booking_id': booking_id, 'user_id': user_id}
+        json_message = json.dumps(message)
+        print("[Create Booking] Sending out notification (booking_confirmation_callback)", json_message)
+        send_notification('booking_confirmations', json_message)
         return jsonify(booking_response.json()), 200
     except Exception as e:
         return jsonify({
@@ -83,6 +91,17 @@ def cancel_booking():
         if get_booking_response.status_code != 200:
             return jsonify({'error': 'Error with Retrieving Booking Information'}), 500
         payment_id = get_booking_response.json().get('payment_id') 
+        booking_datetime_str = get_booking_response.json().get('booking_datetime') 
+        booking_status = get_booking_response.json().get('booking_status') 
+        user_id = get_booking_response.json().get('user_id') 
+        if booking_status != "IN_PROGRESS":
+            return jsonify({'error': 'No Upcoming Booking'}), 500
+        # # Convert the datetime string to a datetime object
+        booking_datetime = datetime.datetime.strptime(booking_datetime_str, "%a, %d %b %Y %H:%M:%S %Z")
+        # # Get the current time
+        current_time = datetime.datetime.now()
+        if current_time > booking_datetime:
+            return jsonify({'error': 'Booking has started, unable to cancel'}), 500
 
         # Cancel Booking on - charging-station-booking
         cancel_booking_url = f"{CHARGING_STATION_BOOKING_BASE}/cancel_booking"
@@ -102,6 +121,10 @@ def cancel_booking():
         if refund_payment_response.status_code != 200:
             return jsonify({'error': 'Error with Payment Refund'}), 500
         
+        message = {'booking_id': booking_id, 'user_id': user_id}
+        json_message = json.dumps(message)
+        print("[Cancel Booking] Sending out notification (booking_cancellation_callback)", json_message)
+        send_notification('booking_cancellation_notifications', json_message)
         return jsonify({'message': "Booking Cancelled"}), 200
     except Exception as e:
         return jsonify({
@@ -171,5 +194,15 @@ def cancel_booking():
 
 
     
-
+# SEND NOTIFICATION via AMQP
+def send_notification(queue_name, message):
+    try:
+        connection = pika.BlockingConnection(pika.ConnectionParameters(RABBITMQHOST))
+        channel = connection.channel()
+        channel.queue_declare(queue=queue_name)
+        channel.basic_publish(exchange='', routing_key=queue_name, body=message)
+        print(f"Sent notification to {queue_name}: {message}")
+        connection.close()
+    except Exception as e:
+        return {}
 

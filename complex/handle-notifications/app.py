@@ -93,7 +93,8 @@ def booking_confirmation_callback(ch, method, properties, body):
     
     if booking_details:
         # Send notification to the user
-        send_user_notification(booking_details, "83217652")
+        message_str = 'Booking Confirmation\n' + booking_details
+        send_user_notification(message_str, "83217652")
     else:
         print("Failed to retrieve booking details")
 
@@ -105,6 +106,22 @@ def car_collected_callback(ch, method, properties, body):
 
 def booking_cancellation_callback(ch, method, properties, body):
     print("Received booking cancellation notification:", body)
+    # Decode the body from bytes to string
+    body_str = body.decode('utf-8')
+    
+    # Parse the JSON string into a Python dictionary
+    request_data = json.loads(body_str)
+    booking_id = request_data.get('booking_id')
+    user_id = request_data.get("user_id")
+    
+    # Retrieve booking details
+    booking_details = get_booking_details(booking_id)
+    message_str = 'Booking Cancellation\n' + booking_details
+    if booking_details:
+        # Send notification to the user
+        send_user_notification(message_str, "83217652")
+    else:
+        print("Failed to retrieve booking details")
 
 def connect_to_rabbitmq():
     attempts = 0
