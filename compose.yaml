@@ -111,6 +111,28 @@ services:
       - delectric-network
 
   #######################################
+  # Charger-Availability Microservice
+  #######################################
+
+  delectric-charger-availability:
+    build: 
+      context: ./charger-availability
+    ports:
+      - "5006:5006"
+    depends_on:
+      - Delectric-mysql
+      - delectric-charging-station
+      - rabbitmq
+    environment:
+      - dbURL=mysql+mysqlconnector://${DB_USER}:${DB_USER_PASSWORD}@Delectric-mysql:3306/
+      - notification_URL=http://delectric-handle-notifications:5104/send-notification
+      - BOOKING_URL=http://delectric-charging-station:5001/charging-station-booking/
+      - RABBITMQHOST=rabbitmq
+    networks:
+      - delectric-network
+
+
+  #######################################
   # Complex-Micro Service
   #######################################
   #######################################

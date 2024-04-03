@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 RABBITMQHOST = os.getenv('RABBITMQHOST')
 USER_BASE = os.getenv('USER_BASE')
 USER_NOTIFICATION_BASE = os.getenv("USER_NOTIFICATION_BASE")
@@ -112,6 +111,16 @@ def booking_confirmation_callback(ch, method, properties, body):
             print("Failed to retrieve booking details")
     except requests.exceptions.RequestException as e:
         print("Failed to send notification:", e)
+
+def user_sms_notifications(ch, method, properties, body):
+    body_str = body.decode('utf-8')  # Decode byte string to string
+    body_dict = json.loads(body_str)  # Convert string to dictionary
+    send_user_notification(body_dict.get('msg'), "83217652")
+
+def user_sms_notifications(ch, method, properties, body):
+    body_str = body.decode('utf-8')  # Decode byte string to string
+    body_dict = json.loads(body_str)  # Convert string to dictionary
+    send_user_notification(body_dict.get('msg'), "83217652")
 
 def car_ready_callback(ch, method, properties, body):
     print("Received car ready notification:", body)
@@ -232,6 +241,10 @@ def main():
     # Scenario 4: Booking Cancellation Notification
     channel.queue_declare(queue='booking_cancellation_notifications')
     channel.basic_consume(queue='booking_cancellation_notifications', on_message_callback=booking_cancellation_callback, auto_ack=True)
+
+    # Scenario 5: Send SMS Notification for upcoming 
+    channel.queue_declare(queue='user_sms_notifications')
+    channel.basic_consume(queue='user_sms_notifications', on_message_callback=user_sms_notifications, auto_ack=True)
 
     # Scenario 5: Late Collection Notification
     channel.queue_declare(queue='late_collection_notifications')
