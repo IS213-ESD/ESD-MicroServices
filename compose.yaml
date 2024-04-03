@@ -143,9 +143,13 @@ services:
     restart: always
     depends_on:
       - delectric-payment
+      - delectric-user
+      - delectric-charging-station
+      - rabbitmq
     environment:
       # rabbit_host: rabbitmq
       # rabbit_port: 5672
+      RABBITMQHOST: rabbitmq
       CHARGING_STATION_BOOKING_BASE: http://delectric-charging-station:5001/charging-station-booking
       CHARGING_STATION_BASE: http://delectric-charging-station:5001/charging-station
       PAYMENT_BASE: http://delectric-payment:5004/
@@ -223,7 +227,7 @@ services:
       BOOKING_BOOKING_URL: http://delectric-charging-station:5001/charging-station-booking/booking/
       USER_NOTIFICATION: http://delectric-user-notification:5003/sendnotification
       PAYMENT: http://delectric-payment:5004/create-payment
-      REFUND: http://delectric-payment:5004/create-full-refund
+      REFUND: http://delectric-payment:5004/create-refund
 
     networks:
       - delectric-network
@@ -238,8 +242,6 @@ services:
       - "5672:5672"
       - "15672:15672"
     volumes: 
-      - ./rabbitmq.config:/etc/rabbitmq/rabbitmq.config
-      - ./rabbitmq_definitions.json:/etc/rabbitmq/rabbitmq_definitions.json
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - delectric-network

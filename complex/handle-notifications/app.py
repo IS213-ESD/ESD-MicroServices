@@ -20,6 +20,7 @@ CHARGING_STATION_BASE = os.getenv("CHARGING_STATION_BASE")
 GET_BOOKING_BY_ID_URL = CHARGING_STATION_BOOKING_BASE + "/booking/"
 GET_CHARGER_BY_ID_URL = CHARGING_STATION_BASE + "/chargers/"
 SEND_USER_NOTIFICATION_URL = USER_NOTIFICATION_BASE + "/sendnotification"
+GET_USER_DETAILS_URL = USER_BASE + "/getuserdetails/"
 
 def send_user_notification(msg, phone):
     try:
@@ -69,10 +70,11 @@ def get_booking_details(booking_id):
         print("Failed to retrieve booking details:", e)
         return None
     
+
 def get_userdetails(user_id):
-    GET_USER_DETAILS_URL = os.getenv('GET_USER_DETAILS_URL') + f'{user_id}'
     try:
-        user_response = requests.get(GET_USER_DETAILS_URL)
+        GET_USER_DETAILS_BY_ID = GET_USER_DETAILS_URL + f'{user_id}'
+        user_response = requests.get(GET_USER_DETAILS_BY_ID)
         if user_response.status_code != 200:
             return {'error': 'Failed to fetch data', 'code': 500}
         user_data = user_response.json()
@@ -83,30 +85,33 @@ def get_userdetails(user_id):
     
 
 def booking_confirmation_callback(ch, method, properties, body):
-    print("Received booking confirmation notification:", body)
-    # Decode the body from bytes to string
-    body_str = body.decode('utf-8')
-    
-    # Parse the JSON string into a Python dictionary
-    request_data = json.loads(body_str)
-    booking_id = request_data.get('booking_id')
-    user_id = request_data.get("user_id")
-    
-    # Retrieve booking details
-    booking_details = get_booking_details(booking_id)
-    
-    if booking_details:
-        # Send notification to the user
-        message_str = 'Booking Confirmation\n' + booking_details
-        userdetails = get_userdetails(user_id)
-        if userdetails:
-            phone = userdetails
-            send_user_notification(message_str, phone)
-            print("Cancellation notification sent successfully.")
+    try:
+        print("Received booking confirmation notification:", body)
+        # Decode the body from bytes to string
+        body_str = body.decode('utf-8')
+        
+        # Parse the JSON string into a Python dictionary
+        request_data = json.loads(body_str)
+        booking_id = request_data.get('booking_id')
+        user_id = request_data.get("user_id")
+        
+        # Retrieve booking details
+        booking_details = get_booking_details(booking_id)
+        
+        if booking_details:
+            # Send notification to the user
+            message_str = 'Booking Confirmation\n' + booking_details
+            userdetails = get_userdetails(user_id)
+            if userdetails:
+                phone = userdetails
+                send_user_notification(message_str, phone)
+                print("Cancellation notification sent successfully.")
+            else:
+                print('Failed to retrieve user details')
         else:
-            print('Failed to retrieve user details')
-    else:
-        print("Failed to retrieve booking details")
+            print("Failed to retrieve booking details")
+    except requests.exceptions.RequestException as e:
+        print("Failed to send notification:", e)
 
 def car_ready_callback(ch, method, properties, body):
     print("Received car ready notification:", body)
@@ -115,54 +120,82 @@ def car_collected_callback(ch, method, properties, body):
     print("Received car collected notification:", body)
 
 def booking_cancellation_callback(ch, method, properties, body):
-    print("Received booking cancellation notification:", body)
-    # Decode the body from bytes to string
-    body_str = body.decode('utf-8')
-    
-    # Parse the JSON string into a Python dictionary
-    request_data = json.loads(body_str)
-    booking_id = request_data.get('booking_id')
-    user_id = request_data.get("user_id")
-    crafted_msg = request_data.get("msg") | False
-    if crafted_msg is False:
-        # Retrieve booking details
-        booking_details = get_booking_details(booking_id)
-        message_str = 'Booking Cancellation\n' + booking_details
-    userdetails = get_userdetails(user_id)
-    if userdetails:
-        phone = userdetails
-        send_user_notification(crafted_msg, phone)
-        print("Cancellation notification sent successfully.")
-    else:
-        print('Failed to retrieve user details')
+    try:
+        print("Received booking cancellation notification:", body)
+        # Decode the body from bytes to string
+        body_str = body.decode('utf-8')
+        
+        # Parse the JSON string into a Python dictionary
+        request_data = json.loads(body_str)
+        booking_id = request_data.get('booking_id')
+        user_id = request_data.get("user_id")
+        crafted_msg = request_data.get("msg", False)
+        if crafted_msg is False:
+            # Retrieve booking details
+            booking_details = get_booking_details(booking_id)
+            message_str = 'Booking Cancellation\n' + booking_details
+        userdetails = get_userdetails(user_id)
+        if userdetails:
+            phone = userdetails
+            send_user_notification(crafted_msg, phone)
+            print("Cancellation notification sent successfully.")
+        else:
+            print('Failed to retrieve user details')
+    except requests.exceptions.RequestException as e:
+        print("Failed to send notification:", e)
 
 def late_collection_callback(ch, method, properties, body):
-    print("Received late collection message:", body)
-    body_str = body.decode('utf-8')
-    request_data = json.loads(body_str)
-    user_id = request_data['user_id']
-    msg = request_data['msg']
-    userdetails = get_userdetails(user_id)
-    if userdetails:
-        phone = userdetails
-    else:
-        print('Failed to retrieve user details')
-    send_user_notification(msg, phone)
-    print("Late notification sent successfully.")
+    try:
+        print("Received late collection message:", body)
+        body_str = body.decode('utf-8')
+        request_data = json.loads(body_str)
+        user_id = request_data['user_id']
+        msg = request_data['msg']
+        userdetails = get_userdetails(user_id)
+        if userdetails:
+            phone = userdetails
+            send_user_notification(msg, phone)
+            print("Late notification sent successfully.")
+        else:
+            print('Failed to retrieve user details')
+    except requests.exceptions.RequestException as e:
+        print("Failed to send notification:", e)
 
 def refund_callback(ch, method, properties, body):
-    print("Received refund message:", body)
-    body_str = body.decode('utf-8')
-    request_data = json.loads(body_str)
-    user_id = request_data['user_id']
-    msg = request_data['msg']
-    userdetails = get_userdetails(user_id)
-    if userdetails:
-        phone = userdetails
-    else:
-        print('Failed to retrieve user details')
-    send_user_notification(msg, phone)
-    print("Refund notification sent successfully.")
+    try:
+        print("Received refund message:", body)
+        body_str = body.decode('utf-8')
+        request_data = json.loads(body_str)
+        user_id = request_data['user_id']
+        msg = request_data['msg']
+        userdetails = get_userdetails(user_id)
+        if userdetails:
+            phone = userdetails
+            send_user_notification(msg, phone)
+            print("Refund notification sent successfully.")
+        else:
+            print('Failed to retrieve user details')
+    except requests.exceptions.RequestException as e:
+        print("Failed to send notification:", e)
+
+def booking_complete_callback(ch, method, properties, body):
+    print("Booking complete message:", body)
+    try:
+        body_str = body.decode('utf-8')
+        request_data = json.loads(body_str)
+        user_id = request_data['user_id']
+        charging_fee = request_data['charging_fee']
+        msg = f"Booking Completed!\n\nA usage fee of ${charging_fee} have been charged to your card. Thanks for using Deletric."
+        userdetails = get_userdetails(user_id)
+        if userdetails:
+            phone = userdetails
+            send_user_notification(msg, phone)
+            print("Complete notification sent successfully.")
+        else:
+            print('Failed to retrieve user details')
+        pass
+    except requests.exceptions.RequestException as e:
+        print("Failed to send notification:", e)
 
 def connect_to_rabbitmq():
     attempts = 0
@@ -207,6 +240,10 @@ def main():
     # Scenario 6: Refund Notification
     channel.queue_declare(queue='refund_notifications')
     channel.basic_consume(queue='refund_notifications', on_message_callback=refund_callback, auto_ack=True)
+
+    # Booking Ends
+    channel.queue_declare(queue='booking_complete_notifications')
+    channel.basic_consume(queue='booking_complete_notifications', on_message_callback=booking_complete_callback, auto_ack=True)
 
     print('Waiting for notifications...')
     channel.start_consuming()

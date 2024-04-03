@@ -133,6 +133,74 @@ def cancel_booking():
             }), 500
 
 
+@book_charger_bp.route("/complete-booking", methods=['POST'])
+def complete_booking():
+    try:
+        # user_id = request.json.get('user_id')
+        booking_id = request.json.get('booking_id')
+        # GET PAYMENT ID From booking
+        get_booking_by_id_url = f"{CHARGING_STATION_BOOKING_BASE}/booking/{booking_id}"
+        get_booking_response = requests.get(get_booking_by_id_url)
+        if get_booking_response.status_code != 200:
+            return jsonify({'error': 'Error with Retrieving Booking Information'}), 500
+        payment_id = get_booking_response.json().get('payment_id') 
+        booking_datetime_str = get_booking_response.json().get('booking_datetime') 
+        booking_status = get_booking_response.json().get('booking_status') 
+        booking_duration_hours = get_booking_response.json().get('booking_duration_hours') 
+        booking_charging_fee = get_booking_response.json().get('charging_fee') 
+        user_id = get_booking_response.json().get('user_id') 
+        if booking_status != "IN_PROGRESS":
+            return jsonify({'error': 'No Active Booking'}), 500
+        # # Convert the datetime string to a datetime object
+        booking_datetime = datetime.datetime.strptime(booking_datetime_str, "%a, %d %b %Y %H:%M:%S %Z")
+        # # Get the current time
+        current_time = datetime.datetime.now()
+        end_booking_datetime = booking_datetime + datetime.timedelta(hours=booking_duration_hours)
+        if current_time > end_booking_datetime:
+            return jsonify({'error': 'Booking has Exceeded, unable to end'}), 500
+
+        # Cancel Booking on - charging-station-booking
+        complete_booking_url = f"{CHARGING_STATION_BOOKING_BASE}/complete_booking"
+        complete_booking_data = {
+            "booking_id": booking_id
+        }
+        complete_booking_response = requests.post(complete_booking_url, json=complete_booking_data)
+        if complete_booking_response.status_code != 200:
+            return jsonify({'error': 'Error with Booking Cancellation'}), 500
+        
+        # GET USER PAYMENT TOKEN
+        user_payment_details_url = f"{USER_BASE_URL}/getpaymentdetails/{user_id}"
+        payment_details_response = requests.get(user_payment_details_url)
+        if payment_details_response.status_code != 200:
+            return jsonify({'error': 'Failed to retrieve payment details'}), 500
+        payment_token = payment_details_response.json().get('payment_token')
+        if not payment_token:
+            return jsonify({'error': 'Payment token not found in response'}), 500
+        # Trigger Charge for Charging fee
+        create_payment_url = f"{PAYMENT_BASE}/create-payment"
+        payment_data = {
+            "amount": booking_charging_fee,
+            "payment_method_id": payment_token
+        }
+        payment_response = requests.post(create_payment_url, json=payment_data)
+        print("[PAYMENT RESPONSE]", payment_response.json())
+        if payment_response.status_code != 200:
+            return jsonify({'error': 'Error Making Payment'}), 500
+        payment_id = payment_response.json().get('status') # Points to payment ID
+
+        
+        message = {'booking_id': booking_id, 'user_id': user_id, 'charging_fee': booking_charging_fee}
+        json_message = json.dumps(message)
+        print("[Booking Complete] Sending out notification (booking_complete_notifications)", json_message)
+        send_notification('booking_complete_notifications', json_message)
+        return jsonify({'message': "Booking Complete"}), 200
+    except Exception as e:
+        return jsonify({
+                "code": 500,
+                "message": "book_charger.py internal error"
+            }), 500
+
+
 # # to invoke "Make booking" process
 # @book_charger_bp.route("/make-booking", methods=['POST'])
 # def book_charger():
@@ -204,5 +272,6 @@ def send_notification(queue_name, message):
         print(f"Sent notification to {queue_name}: {message}")
         connection.close()
     except Exception as e:
+        print("ERROR CONNECTING TO AMQP")
         return {}
 

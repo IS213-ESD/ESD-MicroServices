@@ -11,12 +11,11 @@ handle_late_collection_bp = Blueprint('late_complex', __name__, url_prefix='/lat
 
 @handle_late_collection_bp.route('/handle_late_collection', methods=['PUT'])
 def handle_late():
-    data = request.get_json()
-    booking_id = data['booking_id']
-    # Begin handling late collection process
-    print('start works?')
-    BOOKING_BOOKING_URL = os.getenv('BOOKING_BOOKING_URL') + f'{booking_id}'
     try:
+        data = request.get_json()
+        booking_id = data['booking_id']
+        # Begin handling late collection process
+        BOOKING_BOOKING_URL = os.getenv('BOOKING_BOOKING_URL') + f'{booking_id}'
         # invoke charging station booking microservice
         booking_response = requests.get(BOOKING_BOOKING_URL)
         if booking_response.status_code != 200:
@@ -28,7 +27,6 @@ def handle_late():
         charger_id = booking_data['charger_id']
 
         # create message to be sent to late customer
-        print('works?start')
 
         late_message = "Dear Customer, \n\nWe regret to inform you that your scheduled car collection time was missed, and your vehicle remains uncollected past the agreed-upon time. As a result, we must emphasize the importance of collecting your car as soon as possible to avoid further inconvenience. We would like to kindly remind you that late collection will result in additional charges as outlined in our terms and conditions. \n\nWe appreciate your prompt attention to this matter and your cooperation in resolving the situation swiftly."
         message = {'user_id': user_id, 'msg': late_message}
@@ -40,7 +38,6 @@ def handle_late():
         booking_duration_hours = booking_data['booking_duration_hours']
         booking_datetime = datetime.datetime.strptime(booking_datetime_str, "%a, %d %b %Y %H:%M:%S %Z")
         booking_end_time = booking_datetime + datetime.timedelta(hours=booking_duration_hours)
-        print(booking_end_time)
 
         # check if theres any upcoming booking that will be affected
         check_response = checknextbooking(charger_id, booking_end_time)
@@ -69,18 +66,15 @@ def handle_late():
 
 def checknextbooking(charger_id, booking_end_time):
     # invoke booking charger microservice to check if theres any upcoming bookings affected
-    BOOKING_CHARGER_URL = os.getenv('BOOKING_CHARGER_URL') + f'{charger_id}'
     try:
-        print("check next booking")
+        BOOKING_CHARGER_URL = os.getenv('BOOKING_CHARGER_URL') + f'{charger_id}'
         charger_response = requests.get(BOOKING_CHARGER_URL)
         if charger_response.status_code != 200:
             return jsonify({'error': 'Failed to fetch data'}), 500
-        print("check next booking works?")
         charger_data = charger_response.json()
         for charger in charger_data:
             bookingtime_str = charger['booking_datetime']
             bookingtime = datetime.datetime.strptime(bookingtime_str, "%a, %d %b %Y %H:%M:%S %Z")
-            print(bookingtime)
 
             # if theres a booking time that coincides with the late booking, return flag = 0
             if bookingtime == booking_end_time:
@@ -93,7 +87,6 @@ def checknextbooking(charger_id, booking_end_time):
                 }
 
         # else if no affected bookings, return flag = 0
-        print("return flag 0")
         return {
             'flag': 0,
             'code': 200
@@ -143,22 +136,14 @@ def handlenextbooking(booking_id, user_id, payment_id):
 
 def latecharge(user_id):
     # invoke user microservice to get user payment token
-    GET_USER_PAYMENT_URL = os.getenv('GET_USER_PAYMENT_URL') + f'{user_id}'
     try:
-        print('late charge')
+        GET_USER_PAYMENT_URL = os.getenv('GET_USER_PAYMENT_URL') + f'{user_id}'
         user_response = requests.get(GET_USER_PAYMENT_URL)
         if user_response.status_code != 200:
             return {'error': 'Failed to fetch data', 'code': 500}
         user_data = user_response.json()
-        print('why cannot get user details')
-        print(user_data)
         payment_id = user_data['payment_token']
-        print("payment token?")
-        print(payment_id)
-        print("payment token print?")
-
         # invoke payment microservice to create charge
-        print('does it work?')
         PAYMENT = os.getenv('PAYMENT')
         payment_response = requests.post(PAYMENT, json=
         {
@@ -182,7 +167,6 @@ def latecharge(user_id):
 
 
 def send_notification(queue_name, message):
-    print('works?1')
     RABBITMQHOST = os.getenv('RABBITMQHOST')
     connection = pika.BlockingConnection(pika.ConnectionParameters(RABBITMQHOST))
     channel = connection.channel()
