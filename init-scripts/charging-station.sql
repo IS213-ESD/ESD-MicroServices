@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS chargingstationbooking (
   payment_id INT NULL,
   booking_fee DECIMAL(10, 2) DEFAULT 0,  -- New column for booking fee
   charging_fee DECIMAL(10, 2) DEFAULT 0, -- New column for charging fee
+  notification_before BOOLEAN DEFAULT 0,
+  notification_after BOOLEAN DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_chargingstation FOREIGN KEY (charger_id) REFERENCES chargingstation(charger_id)

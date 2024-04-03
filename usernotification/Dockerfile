@@ -1,6 +1,8 @@
 # Use an official Python runtime as a parent image
 FROM python:3-slim
 
+ENV PYTHONUNBUFFERED=1s
+
 # Set the working directory in the container
 WORKDIR /usr/src/app
 

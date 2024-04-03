@@ -9,7 +9,7 @@ PRICE_PER_HOUR_BLOCK=10
 
 @charging_station_booking_bp.route("/")
 def get_all_bookings():
-    booking_list = ChargingStationBooking.query.all()
+    booking_list = ChargingStationBooking.query.filter_by(booking_status="IN_PROGRESS").all()
     return jsonify({"bookings": [booking.json() for booking in booking_list]})
 
 @charging_station_booking_bp.route('/charger/<int:charger_id>', methods=['GET'])
@@ -170,3 +170,45 @@ def complete_booking():
     db.session.commit()
 
     return jsonify({'message': 'Booking status updated successfully'}), 200
+
+
+@charging_station_booking_bp.route('/update_notification_before/<int:booking_id>', methods=['POST'])
+def update_notification_before(booking_id):
+    # Parse request data
+    notification_before = 1
+
+    # Retrieve the booking from the database
+    booking = ChargingStationBooking.query.get(booking_id)
+
+    # Check if the booking exists
+    if not booking:
+        return jsonify({"error": "Booking not found"}), 404
+
+    # Update the booking with the new notification_before value
+    booking.notification_before = notification_before
+
+    # Commit changes to the database
+    db.session.commit()
+
+    return jsonify({'message': 'Notification_before updated successfully', 'booking_id': booking_id}), 200
+
+
+@charging_station_booking_bp.route('/update_notification_after/<int:booking_id>', methods=['POST'])
+def update_notification_after(booking_id):
+    # Parse request data
+    notification_before = 1
+
+    # Retrieve the booking from the database
+    booking = ChargingStationBooking.query.get(booking_id)
+
+    # Check if the booking exists
+    if not booking:
+        return jsonify({"error": "Booking not found"}), 404
+
+    # Update the booking with the new notification_before value
+    booking.notification_after = notification_before
+
+    # Commit changes to the database
+    db.session.commit()
+
+    return jsonify({'message': 'Notification_before updated successfully', 'booking_id': booking_id}), 200

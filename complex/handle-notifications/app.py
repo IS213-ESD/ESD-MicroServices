@@ -117,11 +117,6 @@ def user_sms_notifications(ch, method, properties, body):
     body_dict = json.loads(body_str)  # Convert string to dictionary
     send_user_notification(body_dict.get('msg'), "83217652")
 
-def user_sms_notifications(ch, method, properties, body):
-    body_str = body.decode('utf-8')  # Decode byte string to string
-    body_dict = json.loads(body_str)  # Convert string to dictionary
-    send_user_notification(body_dict.get('msg'), "83217652")
-
 def car_ready_callback(ch, method, properties, body):
     print("Received car ready notification:", body)
 

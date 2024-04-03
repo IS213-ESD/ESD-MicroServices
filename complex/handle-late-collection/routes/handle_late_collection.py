@@ -8,6 +8,10 @@ import json
 
 handle_late_collection_bp = Blueprint('late_complex', __name__, url_prefix='/late_complex')
 
+CHARGING_STATION_BOOKING_BASE = os.getenv('CHARGING_STATION_BOOKING_BASE')
+USER_BASE = os.getenv('USER_BASE')
+PAYMENT_BASE = os.getenv('PAYMENT_BASE')
+CHARGING_STATION_BASE = os.getenv('CHARGING_STATION_BASE')
 
 @handle_late_collection_bp.route('/handle_late_collection', methods=['PUT'])
 def handle_late():
@@ -15,7 +19,7 @@ def handle_late():
         data = request.get_json()
         booking_id = data['booking_id']
         # Begin handling late collection process
-        BOOKING_BOOKING_URL = os.getenv('BOOKING_BOOKING_URL') + f'{booking_id}'
+        BOOKING_BOOKING_URL = CHARGING_STATION_BOOKING_BASE + f'/booking/{booking_id}'
         # invoke charging station booking microservice
         booking_response = requests.get(BOOKING_BOOKING_URL)
         if booking_response.status_code != 200:
@@ -38,7 +42,13 @@ def handle_late():
         booking_duration_hours = booking_data['booking_duration_hours']
         booking_datetime = datetime.datetime.strptime(booking_datetime_str, "%a, %d %b %Y %H:%M:%S %Z")
         booking_end_time = booking_datetime + datetime.timedelta(hours=booking_duration_hours)
-
+        #  Call exceed Booking
+        exceed_booking_data = {
+            "booking_id": booking_id
+        }
+        exceed_booking_response = requests.post(CHARGING_STATION_BOOKING_BASE + "/exceed_booking", json=exceed_booking_data)
+        if exceed_booking_response.status_code != 200:
+            return jsonify({'error': 'Failed to update booking status (exceed booking)'}), 500
         # check if theres any upcoming booking that will be affected
         check_response = checknextbooking(charger_id, booking_end_time)
         if check_response['code'] != 200:
@@ -67,7 +77,7 @@ def handle_late():
 def checknextbooking(charger_id, booking_end_time):
     # invoke booking charger microservice to check if theres any upcoming bookings affected
     try:
-        BOOKING_CHARGER_URL = os.getenv('BOOKING_CHARGER_URL') + f'{charger_id}'
+        BOOKING_CHARGER_URL =CHARGING_STATION_BOOKING_BASE + f'/charger/{charger_id}'
         charger_response = requests.get(BOOKING_CHARGER_URL)
         if charger_response.status_code != 200:
             return jsonify({'error': 'Failed to fetch data'}), 500
@@ -105,7 +115,7 @@ def handlenextbooking(booking_id, user_id, payment_id):
         send_notification('booking_cancellation_notifications', json_message)
 
         # call booking microservice to cancel booking
-        BOOKING_CANCEL = os.getenv('BOOKING_CANCEL')
+        BOOKING_CANCEL = CHARGING_STATION_BASE + '/cancel_booking'
         cancellation_response = requests.post(BOOKING_CANCEL, json=
         {
             'booking_id': booking_id
@@ -114,7 +124,7 @@ def handlenextbooking(booking_id, user_id, payment_id):
             return {'error': 'Failed to cancel booking', 'code':500}
         
         # after booking cancelled, proceed with refund - call payments microservice and proceed with creating full refund
-        REFUND = os.getenv('REFUND')
+        REFUND = PAYMENT_BASE + 'create-refund'
         refund_response = requests.post(REFUND, json=
         {
             'payment_id': payment_id
@@ -137,14 +147,14 @@ def handlenextbooking(booking_id, user_id, payment_id):
 def latecharge(user_id):
     # invoke user microservice to get user payment token
     try:
-        GET_USER_PAYMENT_URL = os.getenv('GET_USER_PAYMENT_URL') + f'{user_id}'
+        GET_USER_PAYMENT_URL = USER_BASE + f'/getpaymentdetails/{user_id}'
         user_response = requests.get(GET_USER_PAYMENT_URL)
         if user_response.status_code != 200:
             return {'error': 'Failed to fetch data', 'code': 500}
         user_data = user_response.json()
         payment_id = user_data['payment_token']
         # invoke payment microservice to create charge
-        PAYMENT = os.getenv('PAYMENT')
+        PAYMENT = PAYMENT_BASE + '/create-payment'
         payment_response = requests.post(PAYMENT, json=
         {
             'amount': 50,
