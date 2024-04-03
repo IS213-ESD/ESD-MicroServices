@@ -26,10 +26,13 @@ VALUES
 CREATE TABLE IF NOT EXISTS chargingstationbooking (
   booking_id INT AUTO_INCREMENT PRIMARY KEY,
   charger_id INT NOT NULL,
-  user_id INT NOT NULL,
+  user_id VARCHAR(30) NULL,
   booking_datetime DATETIME NOT NULL,
   booking_duration_hours INT NOT NULL,
-  booking_status ENUM('IN_PROGRESS', 'CANCELLED', 'COMPLETED', 'EXCEEDED') DEFAULT 'IN_PROGRESS',
+  booking_status ENUM('IN_PROGRESS', 'CANCELLED', 'COMPLETED', 'EXCEEDED', 'PENDING') DEFAULT 'PENDING',
+  payment_id INT NULL,
+  booking_fee DECIMAL(10, 2) DEFAULT 0,  -- New column for booking fee
+  charging_fee DECIMAL(10, 2) DEFAULT 0, -- New column for charging fee
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_chargingstation FOREIGN KEY (charger_id) REFERENCES chargingstation(charger_id)
@@ -38,36 +41,11 @@ CREATE TABLE IF NOT EXISTS chargingstationbooking (
 -- Populate ChargingStationBooking with dummy data
 INSERT INTO chargingstationbooking (charger_id, user_id, booking_datetime, booking_duration_hours, booking_status)
 VALUES
-  (1, 1, '2024-03-09 10:00:00', 2, 'IN_PROGRESS'),  -- Booking in progress
-  (2, 2, '2024-03-10 15:00:00', 1, 'EXCEEDED'),     -- Booking exceeded
-  (3, 3, '2024-03-11 12:00:00', 3, 'COMPLETED'),    -- Completed booking
-  (1, 2, '2024-03-12 08:00:00', 1, 'CANCELLED'),    -- Cancelled booking
-  (1, 1, '2024-03-31 15:00:00', 1, 'IN_PROGRESS'),  -- Booking ending soon (ends at 15:00)
-  (2, 2, '2024-03-31 14:00:00', 1, 'IN_PROGRESS'),  -- Booking exceeded (ended at 15:00)
-  (3, 3, '2024-03-31 16:00:00', 1, 'IN_PROGRESS');  -- Booking upcoming (starts at 16:00)
+  (1, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-31 10:00:00', 100, 'IN_PROGRESS'),  -- Booking in progress
+  (2, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-10 15:00:00', 1, 'EXCEEDED'),     -- Booking exceeded
+  (3, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-06-11 12:00:00', 3, 'IN_PROGRESS'),    -- Completed booking
+  (1, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-12 08:00:00', 1, 'CANCELLED');    -- Cancelled booking
 
--- CREATE TABLE IF NOT EXISTS chargingstationbooking (
---   booking_id INT AUTO_INCREMENT PRIMARY KEY,
---   charger_id INT,
---   user_id INT,
---   booking_date DATE NOT NULL,
---   booking_time_start TIME NOT NULL,
---   booking_duration_hours INT NOT NULL,
---   booking_status ENUM('IN_PROGRESS', 'CANCELLED', 'COMPLETED', 'EXCEEDED') DEFAULT 'IN_PROGRESS',
---   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
---   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
---   CONSTRAINT fk_chargingstation FOREIGN KEY (charger_id) REFERENCES chargingstation(charger_id)
--- );
-
--- INSERT INTO chargingstationbooking (charger_id, user_id, booking_date, booking_time_start, booking_duration_hours, booking_status)
--- VALUES
---   (1, 1, '2024-03-09', '10:00:00', 2, 'IN_PROGRESS'),  -- Booking in progress
---   (2, 2, '2024-03-10', '15:00:00', 1, 'EXCEEDED'),  -- Booking exceeded
---   (3, 3, '2024-03-11', '12:00:00', 3, 'COMPLETED'),  -- Completed booking
---   (1, 2, '2024-03-12', '08:00:00', 1, 'CANCELLED');  -- Cancelled booking
-
-
--- FUNCTIONS
 -- FUNCTIONS
 DROP FUNCTION IF EXISTS check_booking_overlap;
 DELIMITER //
@@ -108,45 +86,3 @@ BEGIN
     END IF;
 END //
 DELIMITER ;
-
--- DROP FUNCTION IF EXISTS check_booking_overlap;
--- DELIMITER //
--- CREATE FUNCTION check_booking_overlap(
---     p_charger_id INT,
---     p_booking_date DATE,
---     p_booking_time_start TIME,
---     p_booking_duration_hours INT
--- ) RETURNS BOOLEAN
--- DETERMINISTIC
--- BEGIN
---     DECLARE overlap_count INT;
-
---     -- Check if there are any overlapping bookings for the given charger, date, and time
---     SELECT COUNT(*)
---     INTO overlap_count
---     FROM chargingstationbooking
---     WHERE charger_id = p_charger_id
---     AND booking_date = p_booking_date
--- 	AND booking_status = 'IN_PROGRESS'
--- 	AND (
--- 		-- Case 1: New booking starts before existing booking and ends after existing booking
--- 		(p_booking_time_start <= booking_time_start AND ADDTIME(p_booking_time_start, SEC_TO_TIME(p_booking_duration_hours * 3600)) > ADDTIME(booking_time_start, SEC_TO_TIME(booking_duration_hours * 3600)))
--- 		OR
--- 		-- Case 2: New booking starts after existing booking and ends before existing booking
--- 		(p_booking_time_start >= booking_time_start AND ADDTIME(p_booking_time_start, SEC_TO_TIME(p_booking_duration_hours * 3600)) < ADDTIME(booking_time_start, SEC_TO_TIME(booking_duration_hours * 3600)))
--- 		OR
--- 		-- Case 3: New booking starts before existing booking and ends before existing booking
--- 		(p_booking_time_start <= booking_time_start AND ADDTIME(p_booking_time_start, SEC_TO_TIME(p_booking_duration_hours * 3600)) > booking_time_start)
--- 		OR
--- 		-- Case 4: New booking starts after existing booking and ends after existing booking
--- 		(p_booking_time_start >= booking_time_start AND ADDTIME(p_booking_time_start, SEC_TO_TIME(p_booking_duration_hours * 3600)) < ADDTIME(booking_time_start, SEC_TO_TIME(booking_duration_hours * 3600)))
--- 	);
-
---     -- If there are overlapping bookings, return true; otherwise, return false
---     IF overlap_count > 0 THEN
---         RETURN TRUE;
---     ELSE
---         RETURN FALSE;
---     END IF;
--- END //
--- DELIMITER ;

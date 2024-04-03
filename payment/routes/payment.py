@@ -18,6 +18,7 @@ def get_all_payments():
 def create_payment_method():
     try:
         data = request.get_json()
+        # return jsonify({"payment_method_id": customer_obj}), 200
         payment_method = stripe.PaymentMethod.create(
             type="card",
             card={
@@ -27,7 +28,12 @@ def create_payment_method():
                 "cvc": data['cvc'],
             },
         )
-        return jsonify({"payment_method_id": payment_method.id}), 200
+        customer_obj = stripe.Customer.create(
+            name="doesntmatterwho",
+            email="doesntmatterwho@idc.com",
+            payment_method=payment_method.id
+        )
+        return jsonify({"payment_method_id": f'{customer_obj.id}:{payment_method.id}'}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -52,17 +58,20 @@ def find_by_id(payment_id):
 @payment_bp.route("/create-payment", methods=['POST'])
 def create_payment():
     data = request.get_json()
+    charge_amount = int(float(data['amount']) * 100)
     try:
         # Create a payment intent with Stripe
+        stripe_customer_id, stripe_payment_id = data['payment_method_id'].split(":")
         payment_intent = stripe.PaymentIntent.create(
-            amount=data['amount'],
+            amount=charge_amount,
             currency='sgd',
-            payment_method=data['payment_method_id'],
+            payment_method=stripe_payment_id,
+            customer=stripe_customer_id,
             confirm=True,  
             automatic_payment_methods={
                 'enabled': True,
                 'allow_redirects': 'never'
-        }
+            }
         )
 
         # Check if the payment intent was successfully confirmed
@@ -70,7 +79,7 @@ def create_payment():
             # Save the payment details to your database
             new_payment = Payment(
                 stripe_id=payment_intent['id'],
-                amount=(data['amount']/100),
+                amount=(charge_amount),
                 status='complete'
             )
             db.session.add(new_payment)
@@ -81,7 +90,7 @@ def create_payment():
         else:
             new_payment = Payment(
                 stripe_id=payment_intent['id'],
-                amount=(data['amount']/100),
+                amount=(charge_amount),
             )
             db.session.add(new_payment)
             db.session.commit()

@@ -14,6 +14,15 @@ def get_all_chargers():
     iot_charger_list = IotCharger.query.all()
     return jsonify({"chargers": [iot_charger.json() for iot_charger in iot_charger_list]})
 
+@iot_charger_bp.route("/iot-chargers/<int:charger_id>")
+def get_chargers_by_id(charger_id):
+    iot_charger_list = IotCharger.query.filter_by(charger_id=charger_id).first()
+    if iot_charger_list:
+        iot_charger_json = iot_charger_list.json()
+        return jsonify(iot_charger_json)
+    return jsonify({'error': "No Charger found"}), 500
+
+
 #start the iot charger
 @iot_charger_bp.route("/start-iot-charger/<int:iot_charger_id>")
 def start_charger(iot_charger_id):

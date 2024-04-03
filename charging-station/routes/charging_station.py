@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, Blueprint, jsonify, send_from_directory
 from models import ChargingStation, ChargingStationBooking, db
 from sqlalchemy import text, func
+from sqlalchemy.orm.exc import NoResultFound
 import datetime
 from geopy.distance import geodesic
 
@@ -19,6 +20,18 @@ def get_charger_image(image_filename):
 def get_all_chargers():
     charger_list = ChargingStation.query.all()
     return jsonify({"chargers": [charger.json() for charger in charger_list]})
+
+
+@charging_station_bp.route("/chargers/<int:charger_id>")
+def get_charger_by_id(charger_id):
+    try:
+        charger_item = ChargingStation.query.filter_by(charger_id=charger_id).one()
+        charger_json = charger_item.json()
+        return jsonify(charger_json), 200
+    except NoResultFound:
+        return jsonify({"error": "Charger not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @charging_station_bp.route("/nearby-chargers", methods=['GET'])
