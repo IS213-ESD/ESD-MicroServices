@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS user (
 -- INSERT DUMMY DATA
 INSERT INTO user (user_id, email, homeaddress, phone, username, payment_token)
 VALUES
-  ("NVqPLXexIFUr3loYRl1GJgkfAep2", "testuser@gmail.com", "", "91231234", "Bob", "cus_Pqexqy3LNhmwzf:pm_1P0xd603o249Di9WnXIY52wQ")
+  ("NVqPLXexIFUr3loYRl1GJgkfAep2", "testuser@gmail.com", "", "83217652", "Bob", "cus_Pqexqy3LNhmwzf:pm_1P0xd603o249Di9WnXIY52wQ");
 
 
 

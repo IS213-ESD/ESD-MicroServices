@@ -69,14 +69,18 @@ def get_booking_details(booking_id):
         print("Failed to retrieve booking details:", e)
         return None
     
-
-# def send_notification(queue_name, message):
-#     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-#     channel = connection.channel()
-#     channel.queue_declare(queue=queue_name)
-#     channel.basic_publish(exchange='', routing_key=queue_name, body=message)
-#     print(f"Sent notification to {queue_name}: {message}")
-#     connection.close()
+def get_userdetails(user_id):
+    GET_USER_DETAILS_URL = os.getenv('GET_USER_DETAILS_URL') + f'{user_id}'
+    try:
+        user_response = requests.get(GET_USER_DETAILS_URL)
+        if user_response.status_code != 200:
+            return {'error': 'Failed to fetch data', 'code': 500}
+        user_data = user_response.json()
+        phone = user_data['phone']
+        return phone
+    except Exception as e:
+        return None
+    
 
 def booking_confirmation_callback(ch, method, properties, body):
     print("Received booking confirmation notification:", body)
@@ -94,7 +98,13 @@ def booking_confirmation_callback(ch, method, properties, body):
     if booking_details:
         # Send notification to the user
         message_str = 'Booking Confirmation\n' + booking_details
-        send_user_notification(message_str, "83217652")
+        userdetails = get_userdetails(user_id)
+        if userdetails:
+            phone = userdetails
+            send_user_notification(message_str, phone)
+            print("Cancellation notification sent successfully.")
+        else:
+            print('Failed to retrieve user details')
     else:
         print("Failed to retrieve booking details")
 
@@ -113,15 +123,46 @@ def booking_cancellation_callback(ch, method, properties, body):
     request_data = json.loads(body_str)
     booking_id = request_data.get('booking_id')
     user_id = request_data.get("user_id")
-    
-    # Retrieve booking details
-    booking_details = get_booking_details(booking_id)
-    message_str = 'Booking Cancellation\n' + booking_details
-    if booking_details:
-        # Send notification to the user
-        send_user_notification(message_str, "83217652")
+    crafted_msg = request_data.get("msg") | False
+    if crafted_msg is False:
+        # Retrieve booking details
+        booking_details = get_booking_details(booking_id)
+        message_str = 'Booking Cancellation\n' + booking_details
+    userdetails = get_userdetails(user_id)
+    if userdetails:
+        phone = userdetails
+        send_user_notification(crafted_msg, phone)
+        print("Cancellation notification sent successfully.")
     else:
-        print("Failed to retrieve booking details")
+        print('Failed to retrieve user details')
+
+def late_collection_callback(ch, method, properties, body):
+    print("Received late collection message:", body)
+    body_str = body.decode('utf-8')
+    request_data = json.loads(body_str)
+    user_id = request_data['user_id']
+    msg = request_data['msg']
+    userdetails = get_userdetails(user_id)
+    if userdetails:
+        phone = userdetails
+    else:
+        print('Failed to retrieve user details')
+    send_user_notification(msg, phone)
+    print("Late notification sent successfully.")
+
+def refund_callback(ch, method, properties, body):
+    print("Received refund message:", body)
+    body_str = body.decode('utf-8')
+    request_data = json.loads(body_str)
+    user_id = request_data['user_id']
+    msg = request_data['msg']
+    userdetails = get_userdetails(user_id)
+    if userdetails:
+        phone = userdetails
+    else:
+        print('Failed to retrieve user details')
+    send_user_notification(msg, phone)
+    print("Refund notification sent successfully.")
 
 def connect_to_rabbitmq():
     attempts = 0
@@ -158,6 +199,14 @@ def main():
     # Scenario 4: Booking Cancellation Notification
     channel.queue_declare(queue='booking_cancellation_notifications')
     channel.basic_consume(queue='booking_cancellation_notifications', on_message_callback=booking_cancellation_callback, auto_ack=True)
+
+    # Scenario 5: Late Collection Notification
+    channel.queue_declare(queue='late_collection_notifications')
+    channel.basic_consume(queue='late_collection_notifications', on_message_callback=late_collection_callback, auto_ack=True)
+
+    # Scenario 6: Refund Notification
+    channel.queue_declare(queue='refund_notifications')
+    channel.basic_consume(queue='refund_notifications', on_message_callback=refund_callback, auto_ack=True)
 
     print('Waiting for notifications...')
     channel.start_consuming()

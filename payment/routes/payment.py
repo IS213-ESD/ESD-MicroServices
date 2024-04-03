@@ -125,3 +125,25 @@ def create_refund():
     except Exception as e:
         return jsonify({"message": str(e)}), 500
     
+# takes in payment_id to create refund from stripe
+@payment_bp.route("/create-full-refund", methods=['POST'])
+def create_full_refund():
+    data = request.get_json()
+    payment = Payment.query.filter_by(payment_id=data['payment_id']).first()
+    if data and payment.status == 'complete':
+        try:
+        # Create a refund with Stripe
+            refund = stripe.Refund.create(
+                payment_intent=payment.stripe_id,
+                amount=int((payment.amount))
+            )
+
+            payment.status = 'refunded'
+            db.session.commit()
+
+            return jsonify({"message": "Full refund successful"}), 200
+
+        except Exception as e:
+            return jsonify({"message": str(e)}), 500
+    else:
+        return jsonify({"message": 'Payment not completed or not found'}), 500
