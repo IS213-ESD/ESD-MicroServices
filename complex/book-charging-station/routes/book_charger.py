@@ -72,6 +72,44 @@ def book_charger():
                 "message": "book_charger.py internal error"
             }), 500
 
+@book_charger_bp.route("/cancel-booking", methods=['POST'])
+def cancel_booking():
+    try:
+        # user_id = request.json.get('user_id')
+        booking_id = request.json.get('booking_id')
+        # GET PAYMENT ID From booking
+        get_booking_by_id_url = f"{CHARGING_STATION_BOOKING_BASE}/booking/{booking_id}"
+        get_booking_response = requests.get(get_booking_by_id_url)
+        if get_booking_response.status_code != 200:
+            return jsonify({'error': 'Error with Retrieving Booking Information'}), 500
+        payment_id = get_booking_response.json().get('payment_id') 
+
+        # Cancel Booking on - charging-station-booking
+        cancel_booking_url = f"{CHARGING_STATION_BOOKING_BASE}/cancel_booking"
+        cancel_booking_data = {
+            "booking_id": booking_id
+        }
+        cancel_booking_response = requests.post(cancel_booking_url, json=cancel_booking_data)
+        if cancel_booking_response.status_code != 200:
+            return jsonify({'error': 'Error with Booking Cancellation'}), 500
+        
+        # Trigger Refund
+        refund_payment_url = f"{PAYMENT_BASE}/create-refund"
+        refund_payment_data = {
+            "payment_id": payment_id
+        }
+        refund_payment_response = requests.post(refund_payment_url, json=refund_payment_data)
+        if refund_payment_response.status_code != 200:
+            return jsonify({'error': 'Error with Payment Refund'}), 500
+        
+        return jsonify({'message': "Booking Cancelled"}), 200
+    except Exception as e:
+        return jsonify({
+                "code": 500,
+                "message": "book_charger.py internal error"
+            }), 500
+
+
 # # to invoke "Make booking" process
 # @book_charger_bp.route("/make-booking", methods=['POST'])
 # def book_charger():

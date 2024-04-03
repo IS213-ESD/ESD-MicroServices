@@ -79,7 +79,7 @@ def create_payment():
             # Save the payment details to your database
             new_payment = Payment(
                 stripe_id=payment_intent['id'],
-                amount=(charge_amount),
+                amount=(charge_amount) / 100,
                 status='complete'
             )
             db.session.add(new_payment)
@@ -102,23 +102,26 @@ def create_payment():
 # takes in payment_id to create refund from stripe
 @payment_bp.route("/create-refund", methods=['POST'])
 def create_refund():
-    data = request.get_json()
-    payment = Payment.query.filter_by(payment_id=data['payment_id']).first()
-    if data and payment.status == 'complete':
-        try:
-        # Create a refund with Stripe
-            refund = stripe.Refund.create(
-                payment_intent=payment.stripe_id,
-                amount=int((payment.amount * 100) * 0.3)
-            )
+    try:
+        data = request.get_json()
+        payment = Payment.query.filter_by(payment_id=data['payment_id']).first()
+        if data and payment.status == 'complete':
+            try:
+            # Create a refund with Stripe
+                stripe.Refund.create(
+                    payment_intent=payment.stripe_id,
+                    amount=int((payment.amount) * 0.3)
+                )
 
-            payment.status = 'refunded'
-            db.session.commit()
+                payment.status = 'refunded'
+                db.session.commit()
 
-            return jsonify({"message": "Refund successful"}), 200
+                return jsonify({"message": "Refund successful"}), 200
 
-        except Exception as e:
-            return jsonify({"message": str(e)}), 500
-    else:
-        return jsonify({"message": 'Payment not completed or not found'}), 500
+            except Exception as e:
+                return jsonify({"message": str(e)}), 500
+        else:
+            return jsonify({"message": 'Payment not completed or not found'}), 500
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
     
