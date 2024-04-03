@@ -195,6 +195,36 @@ services:
       USER_NOTIFICATION_BASE: http://delectric-user-notification:5003/
       CHARGING_STATION_BOOKING_BASE: http://delectric-charging-station:5001/charging-station-booking/
       CHARGING_STATION_BASE: http://delectric-charging-station:5001/charging-station/
+      GET_USER_DETAILS_URL: http://delectric-user:5002/getuserdetails/
+    networks:
+      - delectric-network
+
+  #######################################
+  # Complex-Micro Service Late Collection
+  #######################################
+  delectric-complex-handle-late-collection:
+    build:
+      context: ./complex/handle-late-collection
+    ports:
+      - "5105:5105"
+    depends_on:
+      - Delectric-mysql
+      - delectric-user
+      - delectric-charging-station
+      - delectric-user-notification
+      - rabbitmq
+    environment:      
+      RABBITMQHOST: rabbitmq
+      PYTHONUNBUFFERED: 1
+      BOOKING_CHARGER_URL: http://delectric-charging-station:5001/charging-station-booking/charger/
+      BOOKING_CANCEL: http://delectric-charging-station:5001/charging-station-booking/cancel_booking
+      GET_USER_DETAILS_URL: http://delectric-user:5002/getuserdetails/
+      GET_USER_PAYMENT_URL: http://delectric-user:5002/getpaymentdetails/
+      BOOKING_BOOKING_URL: http://delectric-charging-station:5001/charging-station-booking/booking/
+      USER_NOTIFICATION: http://delectric-user-notification:5003/sendnotification
+      PAYMENT: http://delectric-payment:5004/create-payment
+      REFUND: http://delectric-payment:5004/create-full-refund
+
     networks:
       - delectric-network
 

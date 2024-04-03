@@ -69,7 +69,17 @@ def get_booking_details(booking_id):
         print("Failed to retrieve booking details:", e)
         return None
     
-
+def get_userdetails(user_id):
+    GET_USER_DETAILS_URL = os.getenv('GET_USER_DETAILS_URL') + f'{user_id}'
+    try:
+        user_response = requests.get(GET_USER_DETAILS_URL)
+        if user_response.status_code != 200:
+            return {'error': 'Failed to fetch data', 'code': 500}
+        user_data = user_response.json()
+        phone = user_data['phone']
+        return phone
+    except Exception as e:
+        return None
 # def send_notification(queue_name, message):
 #     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 #     channel = connection.channel()
@@ -104,7 +114,46 @@ def car_collected_callback(ch, method, properties, body):
     print("Received car collected notification:", body)
 
 def booking_cancellation_callback(ch, method, properties, body):
-    print("Received booking cancellation notification:", body)
+    print("Received booking cancellation message:", body)
+    body_str = body.decode('utf-8')
+    request_data = json.loads(body_str)
+    user_id = request_data['user_id']
+    msg = request_data['msg']
+    userdetails = get_userdetails(user_id)
+    if userdetails:
+        phone = userdetails
+    else:
+        print('Failed to retrieve user details')
+    send_user_notification(msg, phone)
+    print("Cancellation notification sent successfully.")
+
+def late_collection_callback(ch, method, properties, body):
+    print("Received late collection message:", body)
+    body_str = body.decode('utf-8')
+    request_data = json.loads(body_str)
+    user_id = request_data['user_id']
+    msg = request_data['msg']
+    userdetails = get_userdetails(user_id)
+    if userdetails:
+        phone = userdetails
+    else:
+        print('Failed to retrieve user details')
+    send_user_notification(msg, phone)
+    print("Late notification sent successfully.")
+
+def refund_callback(ch, method, properties, body):
+    print("Received refund message:", body)
+    body_str = body.decode('utf-8')
+    request_data = json.loads(body_str)
+    user_id = request_data['user_id']
+    msg = request_data['msg']
+    userdetails = get_userdetails(user_id)
+    if userdetails:
+        phone = userdetails
+    else:
+        print('Failed to retrieve user details')
+    send_user_notification(msg, phone)
+    print("Refund notification sent successfully.")
 
 def connect_to_rabbitmq():
     attempts = 0
@@ -141,6 +190,14 @@ def main():
     # Scenario 4: Booking Cancellation Notification
     channel.queue_declare(queue='booking_cancellation_notifications')
     channel.basic_consume(queue='booking_cancellation_notifications', on_message_callback=booking_cancellation_callback, auto_ack=True)
+
+    # Scenario 5: Late Collection Notification
+    channel.queue_declare(queue='late_collection_notifications')
+    channel.basic_consume(queue='late_collection_notifications', on_message_callback=late_collection_callback, auto_ack=True)
+
+    # Scenario 6: Refund Notification
+    channel.queue_declare(queue='refund_notifications')
+    channel.basic_consume(queue='refund_notifications', on_message_callback=refund_callback, auto_ack=True)
 
     print('Waiting for notifications...')
     channel.start_consuming()
