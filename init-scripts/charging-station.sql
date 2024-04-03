@@ -44,7 +44,10 @@ VALUES
   (1, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-31 10:00:00', 100, 'IN_PROGRESS'),  -- Booking in progress
   (2, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-10 15:00:00', 1, 'EXCEEDED'),     -- Booking exceeded
   (3, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-06-11 12:00:00', 3, 'IN_PROGRESS'),    -- Completed booking
-  (1, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-12 08:00:00', 1, 'CANCELLED');    -- Cancelled booking
+  (1, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-12 08:00:00', 1, 'CANCELLED'),    -- Cancelled booking
+  (1, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-31 15:00:00', 1, 'IN_PROGRESS'),  -- Booking ending soon (ends at 16:00)
+  (2, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-31 14:00:00', 1, 'IN_PROGRESS'),  -- Booking exceeded (ended at 15:00)
+  (3, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-31 16:00:00', 1, 'IN_PROGRESS');  -- Booking upcoming (starts at 16:00)
 
 -- FUNCTIONS
 DROP FUNCTION IF EXISTS check_booking_overlap;

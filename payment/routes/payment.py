@@ -109,7 +109,7 @@ def create_refund():
         # Create a refund with Stripe
             refund = stripe.Refund.create(
                 payment_intent=payment.stripe_id,
-                amount=int((payment.amount * 100) * 0.3)
+                amount=int((payment.amount * 100) * 0.7)
             )
 
             payment.status = 'refunded'
