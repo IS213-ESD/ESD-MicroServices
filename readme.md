@@ -2,6 +2,9 @@
 
 This repository contains a Docker Compose setup for a Flask-based Charging Station microservice connected to a MySQL database. Below are instructions on how to run the application locally.
 
+Find Microservices Documentation [here](https://documenter.getpostman.com/view/23431593/2sA2xjzBcz#358da085-5b4a-4036-85b7-8492f3f3294b).
+
+
 ## Prerequisites
 
 Make sure you have the following installed on your machine:
