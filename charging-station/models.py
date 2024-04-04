@@ -1,12 +1,12 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import base64
+# import pytz
 
 db = SQLAlchemy()
 
 class ChargingStation(db.Model):
     __tablename__ = 'chargingstation'
-
     charger_id = db.Column(db.Integer, primary_key=True)
     charger_name = db.Column(db.String(30), nullable=False)
     charger_location = db.Column(db.String(100), nullable=False)
@@ -48,11 +48,13 @@ class ChargingStationBooking(db.Model):
     notification_before = db.Column(db.Boolean, default=False)  # New field for notification_before
     notification_after = db.Column(db.Boolean, default=False)   # New field for notification_after
     def json(self):
+        # gmt8_timezone = pytz.timezone('Asia/Singapore')
+        # localized_datetime = self.booking_datetime.astimezone(gmt8_timezone)
         dto = {
             'booking_id': self.booking_id,
             'charger_id': self.charger_id,
             'user_id': self.user_id,
-            'booking_datetime': self.booking_datetime,
+            'booking_datetime': self.booking_datetime.strftime('%Y-%m-%d %H:%M:%S %Z'),
             'booking_duration_hours': self.booking_duration_hours,
             'booking_status': self.booking_status,
             'payment_id': self.payment_id,

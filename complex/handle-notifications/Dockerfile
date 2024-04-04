@@ -4,6 +4,9 @@ FROM python:3-slim
 # Set the working directory in the container
 ENV PYTHONUNBUFFERED=1
 
+# Set the timezone to GMT+8
+ENV TZ=Asia/Singapore
+
 WORKDIR /app
 
 # Copy the requirements file into the container at /app

@@ -3,6 +3,9 @@ FROM python:3-slim
 
 ENV PYTHONUNBUFFERED=1s
 
+# Set the timezone to GMT+8
+ENV TZ=Asia/Singapore
+
 # Set the working directory in the container
 WORKDIR /usr/src/app
 
