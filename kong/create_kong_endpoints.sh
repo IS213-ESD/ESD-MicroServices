@@ -18,16 +18,38 @@ create_route() {
 
 # Create endpoints for each API
 
-# Charging-Stations-Service
-create_service "charging-stations-service" "http://delectric-charging-station:5001/chargers"
-create_route "charging-stations-service" "/charging-stations/charger" "get_all_charging_stations" "GET"
+# # 5101 COMPLEX - Handle Bookings
+# create_service "getbookingbyuserapi" "http://delectric-complex-handle-bookings:5101/booking-complex/user"
+# create_route "getbookingbyuserapi" "/booking-complex/user" "getbookingbyuserapi" "GET"
 
-# Nearby
-create_service "nearby-charging-stations-service" "http://delectric-charging-station:5001/nearby_stations_booking"
-create_route "nearby-charging-stations-service" "/charging-stations/nearby-chargers" "get_nearby_charging_stations" "POST"
+# # 5102 COMPLEX - Handle End Booking
+# create_service "endbookingapi" "http://delectric-book_charger:5102/book-charger-complex/complete-booking"
+# create_route "endbookingapi" "/book-charger-complex/complete-booking" "endbooking" "POST"
 
-# Add more services and routes as needed for other APIs
-# create_service "other-service" "http://localhost:5002"``
-# create_route "other-service" "/other-endpoint"
+# # 5102 COMPLEX - Handle Cancel Booking
+# create_service "cancelbookingapi" "http://delectric-book_charger:5102/book-charger-complex/cancel-booking"
+# create_route "cancelbookingapi" "/book-charger-complex/cancel-booking" "cancelbookingapi" "POST"
 
-# Add more APIs as needed
+# # 5102 COMPLEX - Handle Create Booking
+# create_service "createbookingapi" "http://delectric-book_charger:5102/book-charger-complex/book-charger"
+# create_route "createbookingapi" "/book-charger-complex/book-charger" "createbookingapi" "POST"
+
+# # 5101 COMPLEX - Handle Create Booking
+# create_service "createbookingapi" "http://delectric-book_charger:5102/book-charger-complex/book-charger"
+# create_route "createbookingapi" "/book-charger-complex/book-charger" "createbookingapi" "POST"
+
+# # 5001 SIMPLE - Get Nearby Booking (Filter by Avail)
+# create_service "nearbychargingstationapi" "http://delectric-charging-station:5001/charging-station/nearby_stations_booking"
+# create_route "nearbychargingstationapi" "/charging-station/nearby_stations_booking" "nearbychargingstationapi" "POST"
+
+# 5001 SIMPLE - Get Nearby Chargers (No filter)
+create_service "nearbychargingstationallapi" "http://delectric-charging-station:5001/charging-station/nearby-chargers"
+create_route "nearbychargingstationallapi" "/charging-station/nearby-chargers" "nearbychargingstationallapi" "POST"
+
+# # 5001 SIMPLE - Get Chargers 
+# create_service "getchargingstationapi" "http://delectric-charging-station:5001/charging-station/chargers"
+# create_route "getchargingstationapi" "/charging-station/chargers" "getchargingstationapi" "POST"
+
+# # 5001 SIMPLE - Get Charging Station Booking 
+# create_service "getbookingchargingstationapi" "http://delectric-charging-station:5001/charging-station-booking/charger"
+# create_route "getbookingchargingstationapi" "/charging-station-booking/charger" "getbookingchargingstationapi" "GET"
