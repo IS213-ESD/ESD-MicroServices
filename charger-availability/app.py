@@ -52,13 +52,16 @@ def close_rabbitmq_connection(exception=None):
 
 def check_database():
     try:
+        print("[DEBUG HERE] WORKING CURRENTLY RUNNING")
         logging.info(f"Checking database at {datetime.now()}")
         booking_result = invoke_http(booking_URL, method="GET")
         current_time = datetime.now()
         # current_time = datetime(2024, 3, 31, 15, 45, 0, tzinfo=timezone.utc)
         print(booking_result)
         for booking in booking_result["bookings"]:
-            booking_datetime = datetime.strptime(booking["booking_datetime"], "%a, %d %b %Y %H:%M:%S %Z")
+            print("DATA IS IN", type(booking["booking_datetime"]))
+            booking_datetime = datetime.strptime(booking["booking_datetime"].strip(), '%Y-%m-%d %H:%M:%S')
+            print("TIME IS", f'|{booking_datetime}|', type(booking_datetime))
             # booking_datetime = booking_datetime.replace(tzinfo=timezone.utc)  # Make it offset-aware 
             booking_status = booking.get('booking_status')
             user_id = booking.get('user_id')
@@ -66,6 +69,8 @@ def check_database():
             booking_id = booking.get('booking_id')
             notification_after = booking.get('notification_after')
             notification_before = booking.get('notification_before')
+            print(f"Start TIME IS {booking_datetime}!")
+            print(f"END TIME IS {end_time}!")
             # print(f"{booking_id} {booking_datetime} {current_time} {notification_after} {notification_before}")
             # flow for bookings ending in 15 mins 
             if current_time <= end_time <= current_time + timedelta(minutes=15) and booking_status == "IN_PROGRESS" and notification_after is False:
@@ -102,8 +107,8 @@ def check_database():
 
 connection = connect_to_rabbitmq()
 scheduler = BackgroundScheduler()
-scheduler.add_job(func=check_database, trigger="interval", seconds=10)
-# scheduler.add_job(check_database, 'cron', minute='*/15')
+# scheduler.add_job(func=check_database, trigger="interval", seconds=30) # For testing Purpose
+scheduler.add_job(check_database, 'cron', minute='*/15')
 scheduler.start()
 
 @app.route('/')
@@ -112,4 +117,4 @@ def home():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    app.run(host='0.0.0.0', port=5006, debug=True)
+    app.run(host='0.0.0.0', port=5006, debug=False)

@@ -21,3 +21,4 @@ venv/
 *.log
 
 ESD-MicroServices/
+.DS_STORE

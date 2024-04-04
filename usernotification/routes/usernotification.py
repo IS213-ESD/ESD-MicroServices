@@ -29,12 +29,12 @@ def sendnotification():
     if '+65' not in phone:
       phone = '+65' + phone
     # send message to user using Twilio virtual number
-    # message = client.messages.create(
-    #   body=msg,
-    #   from_=twilio_num,
-    #   to=phone
-    # )
-    # print(message.json())
+    message = client.messages.create(
+      body=msg,
+      from_=twilio_num,
+      to=phone
+    )
+    print(message)
     print(f"[Simulate message send] {phone}: {msg}")
     return jsonify({
       "code": 200,

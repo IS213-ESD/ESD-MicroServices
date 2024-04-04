@@ -32,7 +32,7 @@ def start_charger(iot_charger_id):
             # if the charger is occupied return an error
             return jsonify({"error": "Charger is already charging"}), 400
         # to simulate iot charger, battery percentage is a random int between 70 to 95%
-        battery_percentage = random.randint(70, 95)
+        battery_percentage = random.randint(30, 50)
         #trigger celery task to start charging
         result = simulate_charging.delay(iot_charger_id,battery_percentage)
 
