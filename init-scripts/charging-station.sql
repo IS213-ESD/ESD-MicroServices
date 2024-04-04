@@ -43,13 +43,13 @@ CREATE TABLE IF NOT EXISTS chargingstationbooking (
 -- Populate ChargingStationBooking with dummy data
 INSERT INTO chargingstationbooking (charger_id, user_id, booking_datetime, booking_duration_hours, booking_status, payment_id)
 VALUES
-  (1, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-31 10:00:00', 100, 'IN_PROGRESS', 4),  -- Booking in progress
+  (1, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-31 10:00:00', 100, 'CANCELLED', 4),  -- Booking in progress
   (2, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-10 15:00:00', 1, 'EXCEEDED', 4),     -- Booking exceeded
-  (3, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-06-11 12:00:00', 3, 'IN_PROGRESS', 4),    -- Completed booking
+  (3, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-06-11 12:00:00', 3, 'CANCELLED', 4),    -- Completed booking
   (1, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-12 08:00:00', 1, 'CANCELLED', 4),    -- Cancelled booking
-  (1, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-31 15:00:00', 1, 'IN_PROGRESS', 4),  -- Booking ending soon (ends at 16:00)
-  (2, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-31 14:00:00', 1, 'IN_PROGRESS', 4),  -- Booking exceeded (ended at 15:00)
-  (3, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-31 16:00:00', 1, 'IN_PROGRESS', 4);  -- Booking upcoming (starts at 16:00)
+  (1, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-31 15:00:00', 1, 'CANCELLED', 4),  -- Booking ending soon (ends at 16:00)
+  (2, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-31 14:00:00', 1, 'CANCELLED', 4),  -- Booking exceeded (ended at 15:00)
+  (3, "NVqPLXexIFUr3loYRl1GJgkfAep2", '2024-03-31 16:00:00', 1, 'CANCELLED', 4);  -- Booking upcoming (starts at 16:00)
 
 -- FUNCTIONS
 DROP FUNCTION IF EXISTS check_booking_overlap;

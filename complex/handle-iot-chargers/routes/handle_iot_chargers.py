@@ -80,7 +80,7 @@ def iot_find_current_booking(charging_station):
         current_time = datetime.datetime.now()
         for booking in get_booking_by_charger_id_data:
             booking_id = booking.get("booking_id")
-            booking_datetime = datetime.datetime.strptime(booking["booking_datetime"], "%a, %d %b %Y %H:%M:%S %Z")
+            booking_datetime = datetime.datetime.strptime(booking["booking_datetime"].strip(), '%Y-%m-%d %H:%M:%S')
             booking_duration_hours = booking.get("booking_duration_hours")
             booking_end_time = booking_datetime + datetime.timedelta(hours=booking_duration_hours)
             if booking_datetime < current_time < booking_end_time:

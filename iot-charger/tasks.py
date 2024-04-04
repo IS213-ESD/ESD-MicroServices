@@ -9,7 +9,7 @@ IOT_COMPLEX_BASE = os.getenv('IOT_COMPLEX_BASE')
 # celery task to simulate charging
 @celery.task
 def simulate_charging(charger_id, battery_percentage):
-    while battery_percentage < 100:
+    while battery_percentage < 85:
         battery_percentage += 1
         print(f"Charger {charger_id}: Current charging percentage: {battery_percentage}%")
         query_result = invoke_http(IOT_COMPLEX_BASE + "/iot-complex/update-station", method='POST', json={"charging_station": charger_id, "charging_status": str(battery_percentage)})

@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, Blueprint, jsonify
-import datetime
+from datetime import  datetime, timedelta, timezone
 import requests
 import os
 import pika
@@ -40,12 +40,14 @@ def handle_late():
         send_notification('late_collection_notifications', json_message)
         booking_datetime_str = booking_data['booking_datetime']
         booking_duration_hours = booking_data['booking_duration_hours']
-        booking_datetime = datetime.datetime.strptime(booking_datetime_str, "%a, %d %b %Y %H:%M:%S %Z")
-        booking_end_time = booking_datetime + datetime.timedelta(hours=booking_duration_hours)
+        booking_datetime = datetime.strptime(booking_datetime_str.strip(), '%Y-%m-%d %H:%M:%S')
+        # booking_datetime = datetime.datetime.strptime(booking_datetime_str, "%a, %d %b %Y %H:%M:%S %Z")
+        booking_end_time = booking_datetime + timedelta(hours=booking_duration_hours)
         #  Call exceed Booking
         exceed_booking_data = {
             "booking_id": booking_id
         }
+        print("[WORKING]")
         exceed_booking_response = requests.post(CHARGING_STATION_BOOKING_BASE + "/exceed_booking", json=exceed_booking_data)
         if exceed_booking_response.status_code != 200:
             return jsonify({'error': 'Failed to update booking status (exceed booking)'}), 500
@@ -84,7 +86,8 @@ def checknextbooking(charger_id, booking_end_time):
         charger_data = charger_response.json()
         for charger in charger_data:
             bookingtime_str = charger['booking_datetime']
-            bookingtime = datetime.datetime.strptime(bookingtime_str, "%a, %d %b %Y %H:%M:%S %Z")
+            bookingtime = datetime.strptime(bookingtime_str.strip(), '%Y-%m-%d %H:%M:%S')
+            # bookingtime = datetime.datetime.strptime(bookingtime_str, "%a, %d %b %Y %H:%M:%S %Z")
 
             # if theres a booking time that coincides with the late booking, return flag = 0
             if bookingtime == booking_end_time:
