@@ -107,8 +107,8 @@ def check_database():
 
 connection = connect_to_rabbitmq()
 scheduler = BackgroundScheduler()
-scheduler.add_job(func=check_database, trigger="interval", seconds=30)
-# scheduler.add_job(check_database, 'cron', minute='*/15')
+# scheduler.add_job(func=check_database, trigger="interval", seconds=30) # For testing Purpose
+scheduler.add_job(check_database, 'cron', minute='*/15')
 scheduler.start()
 
 @app.route('/')
