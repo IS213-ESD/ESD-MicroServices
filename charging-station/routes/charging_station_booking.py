@@ -97,6 +97,31 @@ def update_booking(booking_id):
     return jsonify({'message': 'Booking updated successfully', 'booking_id': booking_id}), 200
 
 
+@charging_station_booking_bp.route('/update_charging_fee/<int:booking_id>', methods=['post'])
+def update_charging_fee(booking_id):
+    try:
+        # Parse request data
+        data = request.json
+        charging_fee = data.get('charging_fee')
+
+        # Retrieve the booking from the database
+        booking = ChargingStationBooking.query.filter_by(booking_id=booking_id, booking_status='IN_PROGRESS').first()
+
+        # Check if the booking exists
+        if not booking:
+            return jsonify({"error": "Booking not found"}), 404
+
+        # Update the booking with the new payment ID and booking status
+        booking.charging_fee += charging_fee
+
+        # Commit changes to the database
+        db.session.commit()
+
+        return jsonify({'message': 'Booking updated successfully', 'booking_id': booking_id}), 200
+    except Exception as e:
+        return jsonify({'error': 'error updating charging fee'}), 500
+
+
 @charging_station_booking_bp.route('/cancel_booking', methods=['POST'])
 def cancel_booking():
     # Get booking ID from request data

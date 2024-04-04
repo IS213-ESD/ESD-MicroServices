@@ -200,6 +200,7 @@ services:
       UPDATE_CHARGING_STATUS_URL: http://delectric-charging-station:5001/charging-station/update-charging-status/
       REMOVE_CHARGING_STATUS_URL: http://delectric-charging-station:5001/charging-station/remove-charging-status/
       IOT_SIMPLE_BASE: http://delectric-iot-charger:5005
+      CHARGING_STATION_BOOKING_BASE: http://delectric-charging-station:5001/charging-station-booking
     networks:
       - delectric-network
   
@@ -265,6 +266,17 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - delectric-network
+
+  # mosquitto:
+  #   image: eclipse-mosquitto
+  #   ports:
+  #     - "1883:1883"
+  #     - "9001:9001"
+  #   volumes:
+  #     - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
+  #   restart: always
+  #   networks:
+  #     - delectric-network
 
   ####################################
   # IOT Charger - Stand Alone

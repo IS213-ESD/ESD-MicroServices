@@ -10,8 +10,9 @@ BASE_IOT_GET_CHARGERS_BY_ID_URL = os.getenv('IOT_GET_CHARGERS_BY_ID_URL')
 BASE_UPDATE_CHARGING_STATUS_URL = os.getenv('UPDATE_CHARGING_STATUS_URL')
 BASE_REMOVE_CHARGING_STATUS_URL = os.getenv('REMOVE_CHARGING_STATUS_URL')
 IOT_SIMPLE_BASE = os.getenv('IOT_SIMPLE_BASE')
-
-headers = {'Content-Type': 'application/json'}    
+CHARGING_STATION_BOOKING_BASE = os.getenv('CHARGING_STATION_BOOKING_BASE')
+CHARGING_FEE_PER_USE = 1 # Set charging fee per sec
+headers = {'Content-Type': 'application/json'}   
 
 @handle_iot_chargers_bp.route('/update-station', methods=['POST'])
 def iot_update_charging_status():
@@ -42,7 +43,9 @@ def iot_update_charging_status():
                                                        headers=headers)
         if update_charging_status_response.status_code != 200:
             return jsonify({'error': 'Failed to update data'}), 500
-        
+        make_charing_fee = iot_find_current_booking(charging_station)
+        if make_charing_fee is None:
+            return jsonify({'error': 'Failed to update booking'}), 500
         return jsonify(update_charging_status_response.json()), 200
 
     except Exception as e:
@@ -65,3 +68,30 @@ def iot_remove_charging_status():
         return jsonify(response_data), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+
+def iot_find_current_booking(charging_station):
+    try:
+        GET_BOOKINGS_BY_CHARGER_ID =  CHARGING_STATION_BOOKING_BASE + f"/charger/{charging_station}"
+        get_booking_by_charger_id_response = requests.get(GET_BOOKINGS_BY_CHARGER_ID)
+        if get_booking_by_charger_id_response.status_code != 200:
+            return None
+        get_booking_by_charger_id_data = get_booking_by_charger_id_response.json()
+        current_time = datetime.datetime.now()
+        for booking in get_booking_by_charger_id_data:
+            booking_id = booking.get("booking_id")
+            booking_datetime = datetime.datetime.strptime(booking["booking_datetime"], "%a, %d %b %Y %H:%M:%S %Z")
+            booking_duration_hours = booking.get("booking_duration_hours")
+            booking_end_time = booking_datetime + datetime.timedelta(hours=booking_duration_hours)
+            if booking_datetime < current_time < booking_end_time:
+                print("[Within slot]", booking_id, booking_end_time)
+                update_booking_charging_fee_url = CHARGING_STATION_BOOKING_BASE + f"/update_charging_fee/{booking_id}"
+                update_booking_charging_fee_response = requests.post(update_booking_charging_fee_url, json={"charging_fee": CHARGING_FEE_PER_USE})
+                if update_booking_charging_fee_response.status_code != 200:
+                    return None
+                break
+        return True
+    except Exception as e:
+        return None
+    
+

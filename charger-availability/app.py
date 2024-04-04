@@ -51,48 +51,52 @@ def close_rabbitmq_connection(exception=None):
     print("RabbitMQ connection closed")
 
 def check_database():
-    logging.info(f"Checking database at {datetime.now()}")
-    booking_result = invoke_http(booking_URL, method="GET")
-    current_time = datetime.now()
-    # current_time = datetime(2024, 3, 31, 15, 45, 0, tzinfo=timezone.utc)
-    for booking in booking_result["bookings"]:
-        booking_datetime = datetime.strptime(booking["booking_datetime"], "%a, %d %b %Y %H:%M:%S %Z")
-        # booking_datetime = booking_datetime.replace(tzinfo=timezone.utc)  # Make it offset-aware 
-        booking_status = booking.get('booking_status')
-        user_id = booking.get('user_id')
-        end_time = booking_datetime + timedelta(hours=booking["booking_duration_hours"])
-        booking_id = booking.get('booking_id')
-        notification_after = booking.get('notification_after')
-        notification_before = booking.get('notification_before')
-        # print(f"{booking_id} {booking_datetime} {current_time} {notification_after} {notification_before}")
-        # flow for bookings ending in 15 mins 
-        if current_time <= end_time <= current_time + timedelta(minutes=15) and booking_status == "IN_PROGRESS" and notification_after is False:
-            message = {'msg': 'Booking ends in 15 minutes, Please be ready to vacate the lot', 'user_id': user_id}
-            json_message = json.dumps(message)
-            print(json_message)
-            invoke_http(CHARGING_STATION_BOOKING_BASE + f"/update_notification_after/{booking_id}", method='POST')
-            notification_result = send_notification('user_sms_notifications', json_message)
-            logging.info(f"Booking ID {booking_id} ENDING SOON - {notification_result}")
-            
-        # flow for bookings that have exceeded time 
-        elif end_time < current_time and booking_status == "IN_PROGRESS":
-            message = {'msg': 'Your booking has exceeded its allotted time. Late charges will apply. Please vacate the lot as soon as possible. Thank you.', 'user_id': user_id}
-            json_message = json.dumps(message)
-            print(json_message)
-            # notification_result = send_notification('user_sms_notifications', json_message)
-            # needs to be updated with the new url for exceed bookings******
-            exceed_result = invoke_http(COMPLEX_HANDLE_LATE_COLLECTION_BASE + "/handle_late_collection", method='PUT', json={'booking_id':booking_id})
-            print(exceed_result, booking_id)
-            # logging.info(f"Booking ID {booking_id} EXCEEDED - {notification_result}")
-            
-        # flow to start bookings
-        elif current_time <= booking_datetime <= current_time + timedelta(minutes=15) and booking_status == "IN_PROGRESS" and notification_before is False:
-            message = {'msg': 'Your booking will start in 15 minutes!', 'user_id': user_id}
-            json_message = json.dumps(message)
-            print(json_message)
-            invoke_http(CHARGING_STATION_BOOKING_BASE + f"/update_notification_before/{booking_id}", method='POST')
-            notification_result = send_notification('user_sms_notifications', json_message)
-            logging.info(f"Booking ID {booking_id} UPCOMING - {notification_result}")
+    try:
+        logging.info(f"Checking database at {datetime.now()}")
+        booking_result = invoke_http(booking_URL, method="GET")
+        current_time = datetime.now()
+        # current_time = datetime(2024, 3, 31, 15, 45, 0, tzinfo=timezone.utc)
+        print(booking_result)
+        for booking in booking_result["bookings"]:
+            booking_datetime = datetime.strptime(booking["booking_datetime"], "%a, %d %b %Y %H:%M:%S %Z")
+            # booking_datetime = booking_datetime.replace(tzinfo=timezone.utc)  # Make it offset-aware 
+            booking_status = booking.get('booking_status')
+            user_id = booking.get('user_id')
+            end_time = booking_datetime + timedelta(hours=booking["booking_duration_hours"])
+            booking_id = booking.get('booking_id')
+            notification_after = booking.get('notification_after')
+            notification_before = booking.get('notification_before')
+            # print(f"{booking_id} {booking_datetime} {current_time} {notification_after} {notification_before}")
+            # flow for bookings ending in 15 mins 
+            if current_time <= end_time <= current_time + timedelta(minutes=15) and booking_status == "IN_PROGRESS" and notification_after is False:
+                message = {'msg': 'Booking ends in 15 minutes, Please be ready to vacate the lot', 'user_id': user_id}
+                json_message = json.dumps(message)
+                print(json_message)
+                invoke_http(CHARGING_STATION_BOOKING_BASE + f"/update_notification_after/{booking_id}", method='POST')
+                notification_result = send_notification('user_sms_notifications', json_message)
+                logging.info(f"Booking ID {booking_id} ENDING SOON - {notification_result}")
+                
+            # flow for bookings that have exceeded time 
+            elif end_time < current_time and booking_status == "IN_PROGRESS":
+                message = {'msg': 'Your booking has exceeded its allotted time. Late charges will apply. Please vacate the lot as soon as possible. Thank you.', 'user_id': user_id}
+                json_message = json.dumps(message)
+                print(json_message)
+                # notification_result = send_notification('user_sms_notifications', json_message)
+                # needs to be updated with the new url for exceed bookings******
+                exceed_result = invoke_http(COMPLEX_HANDLE_LATE_COLLECTION_BASE + "/handle_late_collection", method='PUT', json={'booking_id':booking_id})
+                print(exceed_result, booking_id)
+                # logging.info(f"Booking ID {booking_id} EXCEEDED - {notification_result}")
+                
+            # flow to start bookings
+            elif current_time <= booking_datetime <= current_time + timedelta(minutes=15) and booking_status == "IN_PROGRESS" and notification_before is False:
+                message = {'msg': 'Your booking will start in 15 minutes!', 'user_id': user_id}
+                json_message = json.dumps(message)
+                print(json_message)
+                invoke_http(CHARGING_STATION_BOOKING_BASE + f"/update_notification_before/{booking_id}", method='POST')
+                notification_result = send_notification('user_sms_notifications', json_message)
+                logging.info(f"Booking ID {booking_id} UPCOMING - {notification_result}")
+    except Exception as err:
+        print("ERROR")
             
     logging.info("ONE CYCLE DONE")
 
